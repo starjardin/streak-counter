@@ -6,12 +6,15 @@ import { createClient } from '@/lib/supabase/server'
 export async function signup(_prevState: string | null, formData: FormData) {
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: formData.get('email') as string,
     password: formData.get('password') as string,
   })
 
   if (error) return error.message
+
+  // Email confirmation required — session is null until user confirms
+  if (!data.session) redirect('/signup/confirm')
 
   redirect('/dashboard')
 }
