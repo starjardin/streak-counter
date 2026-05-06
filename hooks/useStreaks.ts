@@ -10,20 +10,49 @@ export function useStreaks() {
   const [streaks, setStreaks] = useState<Streak[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   const fetchStreaks = useCallback(async () => {
     const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      setError('Not authenticated')
+      setLoading(false)
+      return
+    }
+
     const { data, error } = await supabase
       .from('streaks')
       .select('*')
-      .order('created_at', { ascending: true })
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
 
     if (error) {
       setError(error.message)
     } else {
-      setStreaks(data)
+      setStreaks(data || [])
+      setError(null)
     }
     setLoading(false)
+  }, [])
+
+  const deleteStreak = useCallback(async (streakId: string) => {
+    const supabase = createClient()
+    setDeleting(streakId)
+
+    const { error } = await supabase
+      .from('streaks')
+      .delete()
+      .eq('id', streakId)
+
+    if (error) {
+      setError(error.message)
+    } else {
+      setStreaks(prev => prev.filter(s => s.id !== streakId))
+    }
+
+    setDeleting(null)
   }, [])
 
   useEffect(() => {
@@ -33,11 +62,20 @@ export function useStreaks() {
     const supabase = createClient()
     const channel = supabase
       .channel('streaks')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'streaks' }, fetchStreaks)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'streaks' }, () => {
+        fetchStreaks()
+      })
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
   }, [fetchStreaks])
 
-  return { streaks, loading, error, refresh: fetchStreaks }
+  return {
+    streaks,
+    loading,
+    error,
+    deleting,
+    refresh: fetchStreaks,
+    deleteStreak,
+  }
 }
