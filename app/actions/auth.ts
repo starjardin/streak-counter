@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 
 export async function signup(_prevState: string | null, formData: FormData) {
@@ -34,6 +35,53 @@ export async function login(_prevState: string | null, formData: FormData) {
 
 export async function logout() {
   const supabase = await createClient()
+  await supabase.auth.signOut()
+  redirect('/login')
+}
+
+export async function changePasswordAction(
+  _prevState: string | null,
+  formData: FormData,
+): Promise<string | null> {
+  const newPassword = (formData.get('new_password') as string | null) ?? ''
+  const confirm = (formData.get('confirm_password') as string | null) ?? ''
+
+  if (newPassword.length < 6) return 'Password must be at least 6 characters'
+  if (newPassword !== confirm) return 'Passwords do not match'
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  if (error) return error.message
+
+  revalidatePath('/settings')
+  return 'PASSWORD_CHANGED'
+}
+
+export async function deleteAccountAction(
+  _prevState: string | null,
+  formData: FormData,
+): Promise<string | null> {
+  const confirm = (formData.get('confirm') as string | null) ?? ''
+  if (confirm !== 'DELETE') return 'Type DELETE to confirm'
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return 'Not authenticated'
+
+  // Delete from public.users — cascades to streaks, streak_logs, preferences
+  const { error: dbError } = await supabase
+    .from('users')
+    .delete()
+    .eq('id', user.id)
+  if (dbError) return dbError.message
+
+  // Delete the auth user via admin API (requires service-role key)
+  const adminClient = await import('@/lib/supabase/admin').then((m) => m.createAdminClient())
+  const { error: authError } = await adminClient.auth.admin.deleteUser(user.id)
+  if (authError) return authError.message
+
   await supabase.auth.signOut()
   redirect('/login')
 }

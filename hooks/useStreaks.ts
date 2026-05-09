@@ -37,7 +37,7 @@ export function useStreaks() {
     setLoading(false)
   }, [])
 
-  const deleteStreak = useCallback(async (streakId: string) => {
+  const deleteStreak = useCallback(async (streakId: string): Promise<{ error: string | null }> => {
     const supabase = createClient()
     setDeleting(streakId)
 
@@ -47,12 +47,13 @@ export function useStreaks() {
       .eq('id', streakId)
 
     if (error) {
-      setError(error.message)
-    } else {
-      setStreaks(prev => prev.filter(s => s.id !== streakId))
+      setDeleting(null)
+      return { error: error.message }
     }
 
+    setStreaks(prev => prev.filter(s => s.id !== streakId))
     setDeleting(null)
+    return { error: null }
   }, [])
 
   useEffect(() => {

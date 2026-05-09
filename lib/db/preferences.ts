@@ -1,0 +1,40 @@
+import { createClient } from '@/lib/supabase/server'
+
+export type ReminderFrequency = 'daily' | 'three_per_week' | 'weekly' | 'none'
+
+export interface ReminderPreference {
+  user_id: string
+  frequency: ReminderFrequency
+  updated_at: string
+}
+
+export async function getReminderPreference(): Promise<ReminderPreference | null> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data, error } = await supabase
+    .from('reminder_preferences')
+    .select('*')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (error) throw error
+  return data
+}
+
+export async function upsertReminderPreference(frequency: ReminderFrequency): Promise<void> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { error } = await supabase
+    .from('reminder_preferences')
+    .upsert({ user_id: user.id, frequency }, { onConflict: 'user_id' })
+
+  if (error) throw error
+}

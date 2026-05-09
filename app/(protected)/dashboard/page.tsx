@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/actions/auth'
+import Link from 'next/link'
 import { StreaksList } from './StreaksList'
+import { NewStreakButton } from './NewStreakButton'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -20,6 +22,24 @@ export default async function DashboardPage() {
             </div>
 
             <div className="flex items-center gap-6">
+              <Link
+                href="/stats"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Stats
+              </Link>
+              <Link
+                href="/leaderboard"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Leaderboard
+              </Link>
+              <Link
+                href="/settings"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Settings
+              </Link>
               <div className="text-right">
                 <p className="text-sm text-gray-500">Logged in as</p>
                 <p className="text-sm font-medium text-gray-900">{user?.email}</p>
@@ -44,13 +64,7 @@ export default async function DashboardPage() {
             <h2 className="text-xl font-semibold text-gray-900">Your Streaks</h2>
             <p className="text-sm text-gray-500 mt-1">View and manage your active streaks</p>
           </div>
-          <button
-            disabled
-            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Feature coming soon"
-          >
-            + New Streak
-          </button>
+          <NewStreakButton />
         </div>
 
         {/* Streaks List */}

@@ -44,3 +44,23 @@ export async function upsertStreakLog(streakId: string, date: string, isChecked:
   if (error) throw error
   return data
 }
+
+/** All checked-in logs for the authenticated user across all their streaks. */
+export async function getAllCheckedLogs() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data, error } = await supabase
+    .from('streak_logs')
+    .select('date, streak_id, streaks!inner(user_id)')
+    .eq('streaks.user_id', user.id)
+    .eq('is_checked', true)
+    .order('date', { ascending: true })
+
+  if (error) throw error
+  // Return only the date strings
+  return (data ?? []).map((r) => r.date)
+}

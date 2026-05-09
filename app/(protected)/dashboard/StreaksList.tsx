@@ -14,7 +14,8 @@ export function StreaksList() {
   const handleDelete = async (streakId: string) => {
     if (!confirm('Are you sure you want to delete this streak?')) return
     setDeletionError(null)
-    await deleteStreak(streakId)
+    const { error } = await deleteStreak(streakId)
+    if (error) setDeletionError(error)
   }
 
   // Loading state
