@@ -3,6 +3,7 @@
 import { useStreaks } from '@/hooks/useStreaks'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
+import Link from 'next/link'
 import { useState } from 'react'
 
 dayjs.extend(relativeTime)
@@ -78,10 +79,13 @@ export function StreaksList() {
         {streaks.map((streak) => (
           <div
             key={streak.id}
-            className="bg-white rounded-lg border border-gray-200 p-4 hover:border-gray-300 transition-colors"
+            className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
           >
             <div className="flex items-start justify-between">
-              <div className="flex-1 min-w-0">
+              <Link
+                href={`/dashboard/${streak.id}`}
+                className="flex-1 min-w-0 p-4"
+              >
                 <h3 className="text-lg font-semibold text-gray-900 mb-2 truncate">
                   {streak.name}
                 </h3>
@@ -103,12 +107,12 @@ export function StreaksList() {
                     </p>
                   </div>
                 </div>
-              </div>
+              </Link>
 
               <button
                 onClick={() => handleDelete(streak.id)}
                 disabled={deleting === streak.id}
-                className="ml-4 inline-flex items-center justify-center p-2 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="ml-4 mr-4 mt-4 inline-flex items-center justify-center p-2 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Delete streak"
                 title="Delete streak"
               >
@@ -133,6 +137,7 @@ export function StreaksList() {
             </div>
           </div>
         ))}
+
       </div>
     </div>
   )

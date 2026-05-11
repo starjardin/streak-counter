@@ -35,6 +35,12 @@ export default async function DashboardPage() {
                 Leaderboard
               </Link>
               <Link
+                href="/billing"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Billing
+              </Link>
+              <Link
                 href="/settings"
                 className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
               >

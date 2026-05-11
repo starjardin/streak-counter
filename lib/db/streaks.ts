@@ -85,7 +85,7 @@ export async function checkInStreak(id: string) {
 
   if (!existing?.is_checked) {
     const current = await getStreak(id)
-    await updateStreak(id, {
+    return updateStreak(id, {
       count: current.count + 1,
       last_checked_date: today,
     })

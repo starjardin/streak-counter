@@ -12,6 +12,22 @@ export async function getStreakLogs(streakId: string) {
   return data
 }
 
+/** Fetch only logs within the last `days` days (inclusive), filtered at the DB level. */
+export async function getRecentStreakLogs(streakId: string, days: number) {
+  const supabase = await createClient()
+  const from = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const { data, error } = await supabase
+    .from('streak_logs')
+    .select('date, is_checked')
+    .eq('streak_id', streakId)
+    .eq('is_checked', true)
+    .gte('date', from)
+    .order('date', { ascending: false })
+
+  if (error) throw error
+  return data
+}
+
 export async function getStreakLogByDate(streakId: string, date: string) {
   const supabase = await createClient()
   const { data, error } = await supabase

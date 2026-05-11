@@ -1,7 +1,11 @@
 import { notFound } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { getStreak } from '@/lib/db/streaks'
-import { getStreakLogs } from '@/lib/db/streak-logs'
-import { StreakDetail } from './StreakDetail'
+import { getRecentStreakLogs } from '@/lib/db/streak-logs'
+
+const StreakDetail = dynamic(
+  () => import('./StreakDetail').then((m) => ({ default: m.StreakDetail }))
+)
 
 export default async function StreakDetailPage({
   params,
@@ -13,20 +17,13 @@ export default async function StreakDetailPage({
   let streak
   let logs
   try {
-    ;[streak, logs] = await Promise.all([getStreak(id), getStreakLogs(id)])
+    ;[streak, logs] = await Promise.all([getStreak(id), getRecentStreakLogs(id, 30)])
   } catch {
     notFound()
   }
 
   const today = new Date().toISOString().split('T')[0]
-  const thirtyDaysAgo = new Date(Date.now() - 29 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split('T')[0]
-
-  const checkedDates = logs
-    .filter((l) => l.is_checked && l.date >= thirtyDaysAgo && l.date <= today)
-    .map((l) => l.date)
-
+  const checkedDates = logs.map((l) => l.date)
   const todayChecked = checkedDates.includes(today)
 
   return (

@@ -1,10 +1,18 @@
 import Link from 'next/link'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
+import dynamic from 'next/dynamic'
 import { getStreaks } from '@/lib/db/streaks'
 import { getAllCheckedLogs } from '@/lib/db/streak-logs'
-import { WeeklyBarChart } from './WeeklyBarChart'
-import { YearHeatmap } from './YearHeatmap'
+
+const WeeklyBarChart = dynamic(
+  () => import('./WeeklyBarChart').then((m) => ({ default: m.WeeklyBarChart })),
+  { ssr: false, loading: () => <div className="h-[200px] animate-pulse bg-gray-100 rounded-lg" /> }
+)
+const YearHeatmap = dynamic(
+  () => import('./YearHeatmap').then((m) => ({ default: m.YearHeatmap })),
+  { ssr: false, loading: () => <div className="h-32 animate-pulse bg-gray-100 rounded-lg" /> }
+)
 
 dayjs.extend(isoWeek)
 

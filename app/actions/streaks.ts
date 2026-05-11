@@ -2,7 +2,9 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { createStreak, checkInStreak, updateStreak, deleteStreak } from '@/lib/db/streaks'
+import { createStreak, checkInStreak, updateStreak, deleteStreak, getStreaks } from '@/lib/db/streaks'
+import { getSubscription } from '@/lib/db/subscriptions'
+import { FREE_TIER_STREAK_LIMIT } from '@/lib/stripe'
 
 export async function createStreakAction(
   _prevState: string | null,
@@ -12,6 +14,16 @@ export async function createStreakAction(
 
   if (!name) return 'Streak name is required'
   if (name.length > 50) return 'Streak name must be 50 characters or less'
+
+  // Enforce free-tier limit
+  const subscription = await getSubscription()
+  const isPro = subscription?.plan === 'pro' && subscription?.status === 'active'
+  if (!isPro) {
+    const existing = await getStreaks()
+    if (existing.length >= FREE_TIER_STREAK_LIMIT) {
+      return `Free plan is limited to ${FREE_TIER_STREAK_LIMIT} streaks. Upgrade to Pro for unlimited streaks.`
+    }
+  }
 
   let streakId: string
   try {
