@@ -4,12 +4,22 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 
+function getAppUrl() {
+  return process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
+}
+
 export async function signup(_prevState: string | null, formData: FormData) {
   const supabase = await createClient()
+  const appUrl = getAppUrl()
+
+  if (!appUrl) return 'App URL is not configured. Set NEXT_PUBLIC_APP_URL.'
 
   const { data, error } = await supabase.auth.signUp({
     email: formData.get('email') as string,
     password: formData.get('password') as string,
+    options: {
+      emailRedirectTo: `${appUrl}/login`,
+    },
   })
 
   if (error) return error.message
@@ -41,7 +51,9 @@ export async function forgotPassword(
   if (!email) return 'Enter your email address.'
 
   const supabase = await createClient()
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000').replace(/\/$/, '')
+  const appUrl = getAppUrl()
+
+  if (!appUrl) return 'App URL is not configured. Set NEXT_PUBLIC_APP_URL.'
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${appUrl}/reset-password`,
