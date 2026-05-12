@@ -33,6 +33,28 @@ export async function login(_prevState: string | null, formData: FormData) {
   redirect('/dashboard')
 }
 
+export async function forgotPassword(
+  _prevState: string | null,
+  formData: FormData,
+): Promise<string> {
+  const email = (formData.get('email') as string | null)?.trim() ?? ''
+  if (!email) return 'Enter your email address.'
+
+  const supabase = await createClient()
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000').replace(/\/$/, '')
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${appUrl}/reset-password`,
+  })
+
+  // Avoid email enumeration: always return the same response to the UI.
+  if (error) {
+    console.error('resetPasswordForEmail failed', error)
+  }
+
+  return 'If an account exists for that email, we sent a password reset link.'
+}
+
 export async function logout() {
   const supabase = await createClient()
   await supabase.auth.signOut()
