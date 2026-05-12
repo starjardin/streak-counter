@@ -45,7 +45,7 @@ export function WeeklyBarChart({ data }: Props) {
         <Tooltip
           cursor={{ fill: '#f3f4f6' }}
           contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
-          formatter={(v: number) => [v, 'check-ins']}
+          formatter={(value) => [typeof value === 'number' ? value : Number(value ?? 0), 'check-ins']}
         />
         <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
       </BarChart>

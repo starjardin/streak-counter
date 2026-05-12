@@ -5,6 +5,15 @@ import { upsertSubscription, getUserIdByCustomer } from '@/lib/db/subscriptions'
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? ''
 
+function getCurrentPeriodEndIso(subscription: Stripe.Subscription): string | null {
+  const latestPeriodEnd = subscription.items.data.reduce(
+    (max, item) => Math.max(max, item.current_period_end),
+    0
+  )
+
+  return latestPeriodEnd > 0 ? new Date(latestPeriodEnd * 1000).toISOString() : null
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.text()
   const sig = req.headers.get('stripe-signature')
@@ -36,7 +45,7 @@ export async function POST(req: NextRequest) {
           stripe_subscription_id: subscriptionId,
           plan: 'pro',
           status: subscription.status,
-          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          current_period_end: getCurrentPeriodEndIso(subscription),
         })
         break
       }
@@ -54,7 +63,7 @@ export async function POST(req: NextRequest) {
           stripe_subscription_id: subscription.id,
           plan,
           status: subscription.status,
-          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          current_period_end: getCurrentPeriodEndIso(subscription),
         })
         break
       }
@@ -69,7 +78,7 @@ export async function POST(req: NextRequest) {
           stripe_subscription_id: subscription.id,
           plan: 'free',
           status: 'canceled',
-          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          current_period_end: getCurrentPeriodEndIso(subscription),
         })
         break
       }

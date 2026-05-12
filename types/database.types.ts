@@ -14,6 +14,32 @@ export type Database = {
   }
   public: {
     Tables: {
+      reminder_preferences: {
+        Row: {
+          user_id: string
+          frequency: 'daily' | 'three_per_week' | 'weekly' | 'none'
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          frequency?: 'daily' | 'three_per_week' | 'weekly' | 'none'
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          frequency?: 'daily' | 'three_per_week' | 'weekly' | 'none'
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reminder_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           user_id: string
@@ -151,7 +177,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_leaderboard: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          streak_id: string
+          streak_name: string
+          count: number
+          user_id: string
+          user_email: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
+import { connection } from 'next/server'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 import { getStreaks } from '@/lib/db/streaks'
@@ -38,6 +39,8 @@ export default function StatsPage() {
 }
 
 async function StatsContent() {
+  await connection()
+
   const [streaksResult, allDatesResult] = await Promise.allSettled([
     getStreaks(),
     getAllCheckedLogs(),
