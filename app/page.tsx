@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { CurrentYear } from './CurrentYear'
 
 const features = [
@@ -85,7 +86,11 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-gray-100">
         <div className="max-w-4xl mx-auto px-6 py-6 text-center text-xs text-gray-400">
-          © <CurrentYear /> Streak Counter
+          ©{' '}
+          <Suspense fallback={null}>
+            <CurrentYear />
+          </Suspense>{' '}
+          Streak Counter
         </div>
       </footer>
     </div>

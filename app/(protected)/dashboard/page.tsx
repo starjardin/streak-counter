@@ -1,15 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/actions/auth'
 import Link from 'next/link'
 import { StreaksList } from './StreaksList'
 import { NewStreakButton } from './NewStreakButton'
+import { UserEmail } from './UserEmail'
 
-export default async function DashboardPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -48,7 +43,7 @@ export default async function DashboardPage() {
               </Link>
               <div className="text-right">
                 <p className="text-sm text-gray-500">Logged in as</p>
-                <p className="text-sm font-medium text-gray-900">{user?.email}</p>
+                <UserEmail />
               </div>
               <form action={logout}>
                 <button

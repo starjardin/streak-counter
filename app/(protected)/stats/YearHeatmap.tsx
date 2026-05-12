@@ -2,8 +2,10 @@
 
 import dayjs from 'dayjs'
 import dayOfYear from 'dayjs/plugin/dayOfYear'
+import isLeapYear from 'dayjs/plugin/isLeapYear'
 
 dayjs.extend(dayOfYear)
+dayjs.extend(isLeapYear)
 
 interface Props {
   /** All checked-in dates for the year, as 'YYYY-MM-DD' strings. */

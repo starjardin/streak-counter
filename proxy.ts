@@ -1,7 +1,38 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const PROTECTED_PREFIX = [
+  '/dashboard',
+  '/stats',
+  '/leaderboard',
+  '/settings',
+  '/billing',
+  '/pricing',
+]
+
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Common aliases → canonical routes
+  if (pathname === '/signin') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  if (pathname === '/register') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/signup'
+    return NextResponse.redirect(url)
+  }
+
+  const isProtectedRoute = PROTECTED_PREFIX.some((prefix) => pathname.startsWith(prefix))
+  const isAuthPage = pathname === '/login' || pathname === '/signup'
+
+  if (!isProtectedRoute && !isAuthPage) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -25,43 +56,25 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // Refresh session — must not run any logic between createServerClient and getUser
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { pathname } = request.nextUrl
-
-  // Common aliases → canonical routes
-  if (pathname === '/signin') {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
-  }
-
-  if (pathname === '/register') {
-    const url = request.nextUrl.clone()
-    url.pathname = '/signup'
-    return NextResponse.redirect(url)
+  let user = null
+  try {
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser()
+    user = authUser
+  } catch {
+    user = null
   }
 
   // Redirect unauthenticated users away from protected routes
-  const PROTECTED_PREFIX = [
-    '/dashboard',
-    '/stats',
-    '/leaderboard',
-    '/settings',
-    '/billing',
-    '/pricing',
-  ]
-  if (!user && PROTECTED_PREFIX.some((p) => pathname.startsWith(p))) {
+  if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
   // Redirect authenticated users away from auth pages
-  if (user && (pathname === '/login' || pathname === '/signup')) {
+  if (user && isAuthPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)

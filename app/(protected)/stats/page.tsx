@@ -1,23 +1,57 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
-import dynamic from 'next/dynamic'
 import { getStreaks } from '@/lib/db/streaks'
 import { getAllCheckedLogs } from '@/lib/db/streak-logs'
-
-const WeeklyBarChart = dynamic(
-  () => import('./WeeklyBarChart').then((m) => ({ default: m.WeeklyBarChart })),
-  { ssr: false, loading: () => <div className="h-[200px] animate-pulse bg-gray-100 rounded-lg" /> }
-)
-const YearHeatmap = dynamic(
-  () => import('./YearHeatmap').then((m) => ({ default: m.YearHeatmap })),
-  { ssr: false, loading: () => <div className="h-32 animate-pulse bg-gray-100 rounded-lg" /> }
-)
+import { WeeklyBarChart } from './WeeklyBarChart'
+import { YearHeatmap } from './YearHeatmap'
 
 dayjs.extend(isoWeek)
 
-export default async function StatsPage() {
-  const [streaks, allDates] = await Promise.all([getStreaks(), getAllCheckedLogs()])
+export default function StatsPage() {
+  return (
+    <main className="min-h-screen bg-gray-50">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Stats</h1>
+            <p className="text-sm text-gray-500 mt-1">Your streak activity overview</p>
+          </div>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Dashboard
+          </Link>
+        </div>
+      </header>
+
+      <Suspense fallback={<StatsContentSkeleton />}>
+        <StatsContent />
+      </Suspense>
+    </main>
+  )
+}
+
+async function StatsContent() {
+  const [streaksResult, allDatesResult] = await Promise.allSettled([
+    getStreaks(),
+    getAllCheckedLogs(),
+  ])
+
+  const streaks = streaksResult.status === 'fulfilled' ? streaksResult.value : []
+  const allDates = allDatesResult.status === 'fulfilled' ? allDatesResult.value : []
+
+  if (streaksResult.status === 'rejected') {
+    console.error('Failed to load streaks for stats page', streaksResult.reason)
+  }
+  if (allDatesResult.status === 'rejected') {
+    console.error('Failed to load check-ins for stats page', allDatesResult.reason)
+  }
 
   // ── Stat cards ───────────────────────────────────────────────────────────────
   const totalStreaks = streaks.length
@@ -54,26 +88,7 @@ export default async function StatsPage() {
   const uniqueYearDates = [...new Set(yearDates)]
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Stats</h1>
-            <p className="text-sm text-gray-500 mt-1">Your streak activity overview</p>
-          </div>
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Dashboard
-          </Link>
-        </div>
-      </header>
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -155,7 +170,29 @@ export default async function StatsPage() {
             </div>
           </div>
         )}
+    </div>
+  )
+}
+
+function StatsContentSkeleton() {
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 animate-pulse">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="h-3 w-24 bg-gray-200 rounded" />
+            <div className="h-8 w-16 bg-gray-100 rounded mt-3" />
+          </div>
+        ))}
       </div>
-    </main>
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="h-4 w-48 bg-gray-200 rounded mb-4" />
+        <div className="h-[200px] bg-gray-100 rounded-lg" />
+      </div>
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="h-4 w-40 bg-gray-200 rounded mb-4" />
+        <div className="h-32 bg-gray-100 rounded-lg" />
+      </div>
+    </div>
   )
 }

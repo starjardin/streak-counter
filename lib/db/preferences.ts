@@ -8,6 +8,12 @@ export interface ReminderPreference {
   updated_at: string
 }
 
+let hasLoggedMissingPreferencesTable = false
+
+function isMissingReminderPreferencesTable(error: { code?: string } | null): boolean {
+  return error?.code === 'PGRST205'
+}
+
 export async function getReminderPreference(): Promise<ReminderPreference | null> {
   const supabase = await createClient()
   const {
@@ -21,7 +27,18 @@ export async function getReminderPreference(): Promise<ReminderPreference | null
     .eq('user_id', user.id)
     .maybeSingle()
 
-  if (error) throw error
+  if (error) {
+    if (isMissingReminderPreferencesTable(error)) {
+      if (!hasLoggedMissingPreferencesTable) {
+        console.error('reminder_preferences table is missing in Supabase schema cache', error)
+        hasLoggedMissingPreferencesTable = true
+      }
+      return null
+    }
+
+    throw error
+  }
+
   return data
 }
 
@@ -36,5 +53,11 @@ export async function upsertReminderPreference(frequency: ReminderFrequency): Pr
     .from('reminder_preferences')
     .upsert({ user_id: user.id, frequency }, { onConflict: 'user_id' })
 
-  if (error) throw error
+  if (error) {
+    if (isMissingReminderPreferencesTable(error)) {
+      throw new Error('Reminder preferences are not available yet. Apply the latest database migrations and try again.')
+    }
+
+    throw error
+  }
 }

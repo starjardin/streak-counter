@@ -1,19 +1,12 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
 import { getReminderPreference } from '@/lib/db/preferences'
 import { RemindersSection } from './RemindersSection'
 import { PasswordSection } from './PasswordSection'
 import { DangerSection } from './DangerSection'
+import { ProfileSection } from './ProfileSection'
 
-export default async function SettingsPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const preference = await getReminderPreference()
-  const currentFrequency = preference?.frequency ?? 'none'
-
+export default function SettingsPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
@@ -35,32 +28,11 @@ export default async function SettingsPage() {
       </header>
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+        <ProfileSection />
 
-        {/* Profile */}
-        <section className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Profile</h2>
-          <div className="flex items-center gap-4">
-            {/* Initials avatar */}
-            <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
-              {(user?.email ?? '?').slice(0, 2).toUpperCase()}
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900">{user?.email}</p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Member since{' '}
-                {user?.created_at
-                  ? new Date(user.created_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                    })
-                  : '—'}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Reminders */}
-        <RemindersSection current={currentFrequency} />
+        <Suspense fallback={<RemindersSection current="none" />}>
+          <RemindersSectionLoader />
+        </Suspense>
 
         {/* Password */}
         <PasswordSection />
@@ -71,4 +43,11 @@ export default async function SettingsPage() {
       </div>
     </main>
   )
+}
+
+async function RemindersSectionLoader() {
+  const preference = await getReminderPreference()
+  const currentFrequency = preference?.frequency ?? 'none'
+
+  return <RemindersSection current={currentFrequency} />
 }
