@@ -2,15 +2,27 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 
-function getAppUrl() {
-  return process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
+async function getAppUrl() {
+  const envUrl = (process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL)?.replace(/\/$/, '')
+  if (envUrl) return envUrl
+
+  const headersList = await headers()
+  const origin = headersList.get('origin')?.replace(/\/$/, '')
+  if (origin) return origin
+
+  const host = headersList.get('x-forwarded-host') ?? headersList.get('host')
+  const proto = headersList.get('x-forwarded-proto') ?? 'https'
+  if (host) return `${proto}://${host}`
+
+  return ''
 }
 
 export async function signup(_prevState: string | null, formData: FormData) {
   const supabase = await createClient()
-  const appUrl = getAppUrl()
+  const appUrl = await getAppUrl()
 
   if (!appUrl) return 'App URL is not configured. Set NEXT_PUBLIC_APP_URL.'
 
@@ -51,7 +63,7 @@ export async function forgotPassword(
   if (!email) return 'Enter your email address.'
 
   const supabase = await createClient()
-  const appUrl = getAppUrl()
+  const appUrl = await getAppUrl()
 
   if (!appUrl) return 'App URL is not configured. Set NEXT_PUBLIC_APP_URL.'
 
