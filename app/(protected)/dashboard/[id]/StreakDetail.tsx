@@ -1,115 +1,127 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useRef, useActionState } from 'react'
-import Link from 'next/link'
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-import toast from 'react-hot-toast'
-import confetti from 'canvas-confetti'
+import { useState, useEffect, useRef, useActionState } from "react";
+import Link from "next/link";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import toast from "react-hot-toast";
+import confetti from "canvas-confetti";
 import {
   checkInAction,
   updateStreakNameAction,
   deleteStreakAction,
-} from '@/app/actions/streaks'
-import type { Tables } from '@/types/database.types'
+} from "@/app/actions/streaks";
+import type { Tables } from "@/types/database.types";
+import { Button } from "@/components/Button";
 
-dayjs.extend(relativeTime)
+dayjs.extend(relativeTime);
 
-type Streak = Tables<'streaks'>
+type Streak = Tables<"streaks">;
 
-const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 interface Props {
-  streak: Streak
-  checkedDates: string[]
-  todayChecked: boolean
+  streak: Streak;
+  checkedDates: string[];
+  todayChecked: boolean;
 }
 
 export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
   // ── Check-in ────────────────────────────────────────────────────────────────
-  const boundCheckIn = checkInAction.bind(null, streak.id)
-  const [checkInError, checkInFormAction, checkInPending] = useActionState(boundCheckIn, null)
-  const wasCheckingIn = useRef(false)
-  const checkInButtonRef = useRef<HTMLButtonElement>(null)
+  const boundCheckIn = checkInAction.bind(null, streak.id);
+  const [checkInError, checkInFormAction, checkInPending] = useActionState(
+    boundCheckIn,
+    null,
+  );
+  const wasCheckingIn = useRef(false);
+  const checkInButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (wasCheckingIn.current && !checkInPending) {
       if (checkInError) {
-        toast.error(checkInError)
+        toast.error(checkInError);
       } else {
-        toast.success('🔥 Checked in! Keep the streak going!')
-        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } })
+        toast.success("🔥 Checked in! Keep the streak going!");
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
       }
     }
-    wasCheckingIn.current = checkInPending
-  }, [checkInPending, checkInError])
+    wasCheckingIn.current = checkInPending;
+  }, [checkInPending, checkInError]);
 
   // Spacebar shortcut: press space anywhere (not in an input) to check in
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (todayChecked || checkInPending) return
-      if (e.key !== ' ') return
-      const tag = (e.target as HTMLElement).tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON') return
-      e.preventDefault()
-      checkInButtonRef.current?.click()
+      if (todayChecked || checkInPending) return;
+      if (e.key !== " ") return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "BUTTON") return;
+      e.preventDefault();
+      checkInButtonRef.current?.click();
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [todayChecked, checkInPending])
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [todayChecked, checkInPending]);
 
   // ── Edit name ────────────────────────────────────────────────────────────────
-  const [isEditing, setIsEditing] = useState(false)
-  const [nameInput, setNameInput] = useState(streak.name)
-  const nameInputRef = useRef<HTMLInputElement>(null)
+  const [isEditing, setIsEditing] = useState(false);
+  const [nameInput, setNameInput] = useState(streak.name);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
-  const boundUpdateName = updateStreakNameAction.bind(null, streak.id)
-  const [nameError, nameFormAction, namePending] = useActionState(boundUpdateName, null)
-  const wasUpdatingName = useRef(false)
+  const boundUpdateName = updateStreakNameAction.bind(null, streak.id);
+  const [nameError, nameFormAction, namePending] = useActionState(
+    boundUpdateName,
+    null,
+  );
+  const wasUpdatingName = useRef(false);
 
   useEffect(() => {
     if (wasUpdatingName.current && !namePending) {
       if (nameError === null) {
-        setIsEditing(false)
-        toast.success('Name updated!')
+        setIsEditing(false);
+        toast.success("Name updated!");
       }
     }
-    wasUpdatingName.current = namePending
-  }, [namePending, nameError])
+    wasUpdatingName.current = namePending;
+  }, [namePending, nameError]);
 
   useEffect(() => {
-    if (!isEditing) setNameInput(streak.name)
-  }, [streak.name, isEditing])
+    if (!isEditing) setNameInput(streak.name);
+  }, [streak.name, isEditing]);
 
   const handleEditOpen = () => {
-    setIsEditing(true)
-    setTimeout(() => nameInputRef.current?.focus(), 0)
-  }
+    setIsEditing(true);
+    setTimeout(() => nameInputRef.current?.focus(), 0);
+  };
 
   const handleEditCancel = () => {
-    setIsEditing(false)
-    setNameInput(streak.name)
-  }
+    setIsEditing(false);
+    setNameInput(streak.name);
+  };
 
   // ── Delete ────────────────────────────────────────────────────────────────
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const boundDelete = deleteStreakAction.bind(null, streak.id)
-  const [deleteError, deleteFormAction, deletePending] = useActionState(boundDelete, null)
-  const prevDeleteError = useRef<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const boundDelete = deleteStreakAction.bind(null, streak.id);
+  const [deleteError, deleteFormAction, deletePending] = useActionState(
+    boundDelete,
+    null,
+  );
+  const prevDeleteError = useRef<string | null>(null);
 
   useEffect(() => {
     if (deleteError && deleteError !== prevDeleteError.current) {
-      toast.error(deleteError)
+      toast.error(deleteError);
     }
-    prevDeleteError.current = deleteError
-  }, [deleteError])
+    prevDeleteError.current = deleteError;
+  }, [deleteError]);
 
   // ── Calendar ────────────────────────────────────────────────────────────────
-  const today = dayjs()
-  const todayStr = today.format('YYYY-MM-DD')
-  const checkedSet = new Set(checkedDates)
-  const days = Array.from({ length: 30 }, (_, i) => today.subtract(29 - i, 'day'))
-  const firstDayOfWeek = days[0].day()
+  const today = dayjs();
+  const todayStr = today.format("YYYY-MM-DD");
+  const checkedSet = new Set(checkedDates);
+  const days = Array.from({ length: 30 }, (_, i) =>
+    today.subtract(29 - i, "day"),
+  );
+  const firstDayOfWeek = days[0].day();
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
@@ -119,8 +131,18 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
         href="/dashboard"
         className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
         </svg>
         Back to dashboard
       </Link>
@@ -130,7 +152,10 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
         {isEditing ? (
           <form action={nameFormAction} className="space-y-3">
             <div>
-              <label htmlFor="streak-name-edit" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="streak-name-edit"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Streak name
               </label>
               <input
@@ -144,24 +169,28 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <div className="flex justify-end mt-1">
-                <span className={`text-xs ${nameInput.length >= 45 ? 'text-orange-500' : 'text-gray-400'}`}>
+                <span
+                  className={`text-xs ${nameInput.length >= 45 ? "text-orange-500" : "text-gray-400"}`}
+                >
                   {nameInput.length}/50
                 </span>
               </div>
             </div>
             {nameError && (
-              <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{nameError}</p>
+              <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                {nameError}
+              </p>
             )}
             <div className="flex gap-2">
-              <button
+              <Button
                 type="button"
                 onClick={handleEditCancel}
                 disabled={namePending}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
                 disabled={namePending || nameInput.trim().length === 0}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -169,20 +198,26 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
                 {namePending && (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 )}
-                {namePending ? 'Saving…' : 'Save'}
-              </button>
+                {namePending ? "Saving…" : "Save"}
+              </Button>
             </div>
           </form>
         ) : (
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900 flex-1">{streak.name}</h1>
-            <button
+            <h1 className="text-2xl font-bold text-gray-900 flex-1">
+              {streak.name}
+            </h1>
+            <Button
               onClick={handleEditOpen}
-              className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
               aria-label="Edit streak name"
-              title="Edit name"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -190,7 +225,7 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
                   d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-1.414.93l-3.414.656.656-3.414a4 4 0 01.93-1.414z"
                 />
               </svg>
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -206,7 +241,7 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
               {streak.count}
             </p>
             <p className="text-sm text-gray-500 mt-2">
-              {streak.count === 1 ? 'day' : 'days'}
+              {streak.count === 1 ? "day" : "days"}
             </p>
           </div>
 
@@ -217,7 +252,7 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
             <p className="text-lg font-semibold text-gray-900">
               {streak.last_checked_date
                 ? dayjs(streak.last_checked_date).fromNow()
-                : 'Never'}
+                : "Never"}
             </p>
           </div>
         </div>
@@ -225,17 +260,31 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
         <form action={checkInFormAction}>
           {todayChecked ? (
             <div className="flex items-center gap-3 px-6 py-4 bg-green-50 border border-green-200 rounded-xl">
-              <svg className="w-6 h-6 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-6 h-6 text-green-600 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
               <div>
-                <p className="font-semibold text-green-800">Checked in today!</p>
-                <p className="text-sm text-green-600">Come back tomorrow to keep your streak going.</p>
+                <p className="font-semibold text-green-800">
+                  Checked in today!
+                </p>
+                <p className="text-sm text-green-600">
+                  Come back tomorrow to keep your streak going.
+                </p>
               </div>
             </div>
           ) : (
             <div className="space-y-2">
-              <button
+              <Button
                 ref={checkInButtonRef}
                 type="submit"
                 disabled={checkInPending}
@@ -247,11 +296,15 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
                     Checking in…
                   </span>
                 ) : (
-                  'Check In Today'
+                  "Check In Today"
                 )}
-              </button>
+              </Button>
               <p className="text-center text-xs text-gray-400">
-                Press <kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-gray-500 font-mono">Space</kbd> to check in
+                Press{" "}
+                <kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-gray-500 font-mono">
+                  Space
+                </kbd>{" "}
+                to check in
               </p>
             </div>
           )}
@@ -266,7 +319,10 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
 
         <div className="grid grid-cols-7 gap-1 mb-1">
           {DAY_LABELS.map((d) => (
-            <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">
+            <div
+              key={d}
+              className="text-center text-xs font-medium text-gray-400 py-1"
+            >
               {d}
             </div>
           ))}
@@ -277,22 +333,24 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
             <div key={`pad-${i}`} />
           ))}
           {days.map((day) => {
-            const dateStr = day.format('YYYY-MM-DD')
-            const isChecked = checkedSet.has(dateStr)
-            const isToday = dateStr === todayStr
+            const dateStr = day.format("YYYY-MM-DD");
+            const isChecked = checkedSet.has(dateStr);
+            const isToday = dateStr === todayStr;
             return (
               <div
                 key={dateStr}
-                title={day.format('MMM D, YYYY')}
+                title={day.format("MMM D, YYYY")}
                 className={[
-                  'aspect-square rounded-md flex items-center justify-center text-xs font-medium transition-colors',
-                  isChecked ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-400',
-                  isToday ? 'ring-2 ring-blue-500 ring-offset-1' : '',
-                ].join(' ')}
+                  "aspect-square rounded-md flex items-center justify-center text-xs font-medium transition-colors",
+                  isChecked
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-100 text-gray-400",
+                  isToday ? "ring-2 ring-blue-500 ring-offset-1" : "",
+                ].join(" ")}
               >
-                {day.format('D')}
+                {day.format("D")}
               </div>
-            )
+            );
           })}
         </div>
 
@@ -320,18 +378,19 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
         {confirmDelete ? (
           <div className="flex items-center gap-3">
             <p className="text-sm text-gray-700 flex-1">
-              Delete <span className="font-semibold">{streak.name}</span>? This cannot be undone.
+              Delete <span className="font-semibold">{streak.name}</span>? This
+              cannot be undone.
             </p>
-            <button
+            <Button
               type="button"
               onClick={() => setConfirmDelete(false)}
               disabled={deletePending}
               className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
               Cancel
-            </button>
+            </Button>
             <form action={deleteFormAction}>
-              <button
+              <Button
                 type="submit"
                 disabled={deletePending}
                 className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -339,20 +398,20 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
                 {deletePending && (
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 )}
-                {deletePending ? 'Deleting…' : 'Yes, delete'}
-              </button>
+                {deletePending ? "Deleting…" : "Yes, delete"}
+              </Button>
             </form>
           </div>
         ) : (
-          <button
+          <Button
             type="button"
             onClick={() => setConfirmDelete(true)}
             className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             Delete this streak
-          </button>
+          </Button>
         )}
       </div>
     </div>
-  )
+  );
 }

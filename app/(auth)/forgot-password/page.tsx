@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useActionState } from 'react'
 import { forgotPassword } from '@/app/actions/auth'
+import { Button } from '@/components/Button'
 
 export default function ForgotPasswordPage() {
   const [message, action, pending] = useActionState(forgotPassword, null)
@@ -33,13 +34,13 @@ export default function ForgotPasswordPage() {
           <p className="text-sm text-blue-700 bg-blue-50 rounded-lg px-3 py-2">{message}</p>
         )}
 
-        <button
+        <Button
           type="submit"
           disabled={pending}
           className="w-full bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {pending ? 'Sending reset link…' : 'Send reset link'}
-        </button>
+        </Button>
       </form>
 
       <p className="mt-4 text-center text-sm text-gray-600">

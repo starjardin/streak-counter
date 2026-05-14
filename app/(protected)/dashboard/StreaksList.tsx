@@ -1,36 +1,40 @@
-'use client'
+"use client";
 
-import { useStreaks } from '@/hooks/useStreaks'
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-import Link from 'next/link'
-import { useState } from 'react'
+import { Button } from "@/components/Button";
+import { useStreaks } from "@/hooks/useStreaks";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import Link from "next/link";
+import { useState } from "react";
 
-dayjs.extend(relativeTime)
+dayjs.extend(relativeTime);
 
 export function StreaksList() {
-  const { streaks, loading, error, deleting, deleteStreak } = useStreaks()
-  const [deletionError, setDeletionError] = useState<string | null>(null)
+  const { streaks, loading, error, deleting, deleteStreak } = useStreaks();
+  const [deletionError, setDeletionError] = useState<string | null>(null);
 
   const handleDelete = async (streakId: string) => {
-    if (!confirm('Are you sure you want to delete this streak?')) return
-    setDeletionError(null)
-    const { error } = await deleteStreak(streakId)
-    if (error) setDeletionError(error)
-  }
+    if (!confirm("Are you sure you want to delete this streak?")) return;
+    setDeletionError(null);
+    const { error } = await deleteStreak(streakId);
+    if (error) setDeletionError(error);
+  };
 
   // Loading state
   if (loading) {
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 animate-pulse">
+          <div
+            key={i}
+            className="bg-white rounded-lg border border-gray-200 p-4 animate-pulse"
+          >
             <div className="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
             <div className="h-3 bg-gray-100 rounded w-1/2"></div>
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   // Error state
@@ -39,7 +43,7 @@ export function StreaksList() {
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <p className="text-red-800">Error loading streaks: {error}</p>
       </div>
-    )
+    );
   }
 
   // Empty state
@@ -61,10 +65,12 @@ export function StreaksList() {
             />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-1">No streaks yet</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-1">
+          No streaks yet
+        </h3>
         <p className="text-gray-500">Create your first streak to get started</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -103,18 +109,17 @@ export function StreaksList() {
                     <p className="text-gray-900 font-medium mt-0.5">
                       {streak.last_checked_date
                         ? dayjs(streak.last_checked_date).fromNow()
-                        : 'Never'}
+                        : "Never"}
                     </p>
                   </div>
                 </div>
               </Link>
 
-              <button
+              <Button
                 onClick={() => handleDelete(streak.id)}
                 disabled={deleting === streak.id}
                 className="ml-4 mr-4 mt-4 inline-flex items-center justify-center p-2 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Delete streak"
-                title="Delete streak"
               >
                 {deleting === streak.id ? (
                   <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
@@ -133,12 +138,11 @@ export function StreaksList() {
                     />
                   </svg>
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         ))}
-
       </div>
     </div>
-  )
+  );
 }

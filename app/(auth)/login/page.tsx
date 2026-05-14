@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useActionState } from 'react'
 import { login } from '@/app/actions/auth'
+import { Button } from '@/components/Button'
 
 export default function LoginPage() {
   const [error, action, pending] = useActionState(login, null)
@@ -49,13 +50,13 @@ export default function LoginPage() {
           <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
         )}
 
-        <button
+        <Button
           type="submit"
           disabled={pending}
           className="w-full bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {pending ? 'Logging in…' : 'Log in'}
-        </button>
+        </Button>
       </form>
 
       <p className="mt-4 text-center text-sm text-gray-600">

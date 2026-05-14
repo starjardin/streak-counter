@@ -1,8 +1,9 @@
-import { logout } from '@/app/actions/auth'
-import Link from 'next/link'
-import { StreaksList } from './StreaksList'
-import { NewStreakButton } from './NewStreakButton'
-import { UserEmail } from './UserEmail'
+import { logout } from "@/app/actions/auth";
+import Link from "next/link";
+import { StreaksList } from "./StreaksList";
+import { NewStreakButton } from "./NewStreakButton";
+import { UserEmail } from "./UserEmail";
+import { Button } from "@/components/Button";
 
 export default function DashboardPage() {
   return (
@@ -12,8 +13,12 @@ export default function DashboardPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Streak Counter</h1>
-              <p className="text-sm text-gray-500 mt-1">Track your daily habits</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Streak Counter
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Track your daily habits
+              </p>
             </div>
 
             <div className="flex items-center gap-6">
@@ -46,12 +51,12 @@ export default function DashboardPage() {
                 <UserEmail />
               </div>
               <form action={logout}>
-                <button
-                  type="submit"
+                <Button
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  type="submit"
                 >
                   Log out
-                </button>
+                </Button>
               </form>
             </div>
           </div>
@@ -62,8 +67,12 @@ export default function DashboardPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Your Streaks</h2>
-            <p className="text-sm text-gray-500 mt-1">View and manage your active streaks</p>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Your Streaks
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              View and manage your active streaks
+            </p>
           </div>
           <NewStreakButton />
         </div>
@@ -72,5 +81,5 @@ export default function DashboardPage() {
         <StreaksList />
       </div>
     </main>
-  )
+  );
 }
