@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useActionState } from "react";
 import Link from "next/link";
 import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import toast from "react-hot-toast";
 import confetti from "canvas-confetti";
 import {
@@ -14,7 +13,14 @@ import {
 import type { Tables } from "@/types/database.types";
 import { Button } from "@/components/Button";
 
-dayjs.extend(relativeTime);
+function formatLastChecked(date: string | null) {
+  if (!date) return "Never";
+
+  const daysAgo = dayjs().startOf("day").diff(dayjs(date).startOf("day"), "day");
+  if (daysAgo <= 0) return "Today";
+  if (daysAgo === 1) return "Yesterday";
+  return `${daysAgo} days ago`;
+}
 
 type Streak = Tables<"streaks">;
 
@@ -250,9 +256,7 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
               Last checked
             </p>
             <p className="text-lg font-semibold text-gray-900">
-              {streak.last_checked_date
-                ? dayjs(streak.last_checked_date).fromNow()
-                : "Never"}
+              {formatLastChecked(streak.last_checked_date)}
             </p>
           </div>
         </div>

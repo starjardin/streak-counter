@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/Button";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { useStreaks } from "@/hooks/useStreaks";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -12,12 +13,23 @@ dayjs.extend(relativeTime);
 export function StreaksList() {
   const { streaks, loading, error, deleting, deleteStreak } = useStreaks();
   const [deletionError, setDeletionError] = useState<string | null>(null);
+  const [streakToDelete, setStreakToDelete] = useState<string | null>(null);
 
-  const handleDelete = async (streakId: string) => {
-    if (!confirm("Are you sure you want to delete this streak?")) return;
+  const handleDeleteClick = (streakId: string) => {
+    setStreakToDelete(streakId);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!streakToDelete) return;
     setDeletionError(null);
-    const { error } = await deleteStreak(streakId);
+    const targetStreakId = streakToDelete;
+    setStreakToDelete(null);
+    const { error } = await deleteStreak(targetStreakId);
     if (error) setDeletionError(error);
+  };
+
+  const handleDeleteCancel = () => {
+    setStreakToDelete(null);
   };
 
   // Loading state
@@ -116,7 +128,7 @@ export function StreaksList() {
               </Link>
 
               <Button
-                onClick={() => handleDelete(streak.id)}
+                onClick={() => handleDeleteClick(streak.id)}
                 disabled={deleting === streak.id}
                 className="ml-4 mr-4 mt-4 inline-flex items-center justify-center p-2 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Delete streak"
@@ -143,6 +155,14 @@ export function StreaksList() {
           </div>
         ))}
       </div>
+
+      {streakToDelete && (
+        <ConfirmModal
+          onCancel={handleDeleteCancel}
+          onConfirm={handleDeleteConfirm}
+          deleting={Boolean(deleting)}
+        />
+      )}
     </div>
   );
 }
