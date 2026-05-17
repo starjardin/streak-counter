@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Link from "next/link";
 import { useState } from "react";
+import { getCheckInLabel } from "@/app/utils";
 
 dayjs.extend(relativeTime);
 
@@ -105,14 +106,14 @@ export function StreaksList() {
                 className="flex-1 min-w-0 p-4"
               >
                 <h3 className="text-lg font-semibold text-gray-900 mb-2 truncate">
-                  {streak.name}
+                  {streak.name}dadadasdas
                 </h3>
 
                 <div className="flex flex-wrap gap-4 text-sm">
                   <div>
                     <p className="text-gray-500">Current Count</p>
                     <p className="text-2xl font-bold text-blue-600 mt-0.5">
-                      {streak.count}
+                      {streak.count} adasd dddd
                     </p>
                   </div>
 
@@ -120,7 +121,7 @@ export function StreaksList() {
                     <p className="text-gray-500">Last Checked</p>
                     <p className="text-gray-900 font-medium mt-0.5">
                       {streak.last_checked_date
-                        ? dayjs(streak.last_checked_date).fromNow()
+                        ? getCheckInLabel(streak.last_checked_date)
                         : "Never"}
                     </p>
                   </div>
