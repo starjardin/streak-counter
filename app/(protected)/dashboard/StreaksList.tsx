@@ -106,14 +106,14 @@ export function StreaksList() {
                 className="flex-1 min-w-0 p-4"
               >
                 <h3 className="text-lg font-semibold text-gray-900 mb-2 truncate">
-                  {streak.name}dadadasdas
+                  {streak.name}
                 </h3>
 
                 <div className="flex flex-wrap gap-4 text-sm">
                   <div>
                     <p className="text-gray-500">Current Count</p>
                     <p className="text-2xl font-bold text-blue-600 mt-0.5">
-                      {streak.count} adasd dddd
+                      {streak.count}
                     </p>
                   </div>
 
