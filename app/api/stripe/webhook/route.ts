@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import {
@@ -51,20 +52,63 @@ export async function POST(req: NextRequest) {
         console.log("Handling checkout.session.completed event");
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.user_id;
-        if (!userId) break;
+        const customerId = session.customer as string;
+        if (!userId || !customerId) break;
 
-        const subscriptionId = session.subscription as string | null;
-        if (!subscriptionId) break;
+        let subscriptionId = session.subscription as string | null;
+        
+        // If subscription is not on session (timing issue), fetch from customer
+        if (!subscriptionId) {
+          console.log("Subscription not on session, fetching from customer");
+          const subscriptions = await stripe.subscriptions.list({
+            customer: customerId,
+            limit: 1,
+          });
+          subscriptionId = subscriptions.data[0]?.id ?? null;
+        }
+
+        if (!subscriptionId) {
+          console.log("Could not find subscription for customer:", customerId);
+          break;
+        }
 
         const subscription =
           await stripe.subscriptions.retrieve(subscriptionId);
         await upsertSubscription(userId, {
-          stripe_customer_id: session.customer as string,
+          stripe_customer_id: customerId,
           stripe_subscription_id: subscriptionId,
           plan: "pro",
           status: subscription.status,
           current_period_end: getCurrentPeriodEndIso(subscription),
         });
+        revalidatePath("/billing");
+        revalidatePath("/pricing");
+        revalidatePath("/dashboard");
+        break;
+      }
+
+      case "customer.subscription.created": {
+        console.log("Handling customer.subscription.created event");
+        const subscription = event.data.object as Stripe.Subscription;
+        const customerId = subscription.customer as string;
+        const userId = await getUserIdByCustomer(customerId);
+        if (!userId) break;
+
+        // On creation, subscription is always active/trialing
+        const plan =
+          subscription.status === "active" || subscription.status === "trialing"
+            ? "pro"
+            : "free";
+
+        await upsertSubscription(userId, {
+          stripe_subscription_id: subscription.id,
+          plan,
+          status: subscription.status,
+          current_period_end: getCurrentPeriodEndIso(subscription),
+        });
+        revalidatePath("/billing");
+        revalidatePath("/pricing");
+        revalidatePath("/dashboard");
         break;
       }
 
@@ -86,6 +130,9 @@ export async function POST(req: NextRequest) {
           status: subscription.status,
           current_period_end: getCurrentPeriodEndIso(subscription),
         });
+        revalidatePath("/billing");
+        revalidatePath("/pricing");
+        revalidatePath("/dashboard");
         break;
       }
 
@@ -102,6 +149,9 @@ export async function POST(req: NextRequest) {
           status: "canceled",
           current_period_end: getCurrentPeriodEndIso(subscription),
         });
+        revalidatePath("/billing");
+        revalidatePath("/pricing");
+        revalidatePath("/dashboard");
         break;
       }
 
@@ -114,6 +164,9 @@ export async function POST(req: NextRequest) {
 
         console.log("Updating subscription status to past_due for user:", userId);
         await upsertSubscription(userId, { status: "past_due" });
+        revalidatePath("/billing");
+        revalidatePath("/pricing");
+        revalidatePath("/dashboard");
         break;
       }
 
