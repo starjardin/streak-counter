@@ -7,7 +7,7 @@ import {
   getUserIdByCustomer,
 } from "@/lib/db/subscriptions";
 
-const WEBHOOK_SECRET = process.env.NEXT_PUBLIC_STRIPE_WEBHOOK_SECRET ?? "";
+const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "";
 
 function getCurrentPeriodEndIso(
   subscription: Stripe.Subscription,
@@ -27,7 +27,6 @@ export async function POST(req: NextRequest) {
   const sig = req.headers.get("stripe-signature");
 
   if (!sig || !WEBHOOK_SECRET) {
-    console.log("Missing signature or webhook secret", { sig, WEBHOOK_SECRET });
     return NextResponse.json(
       { error: "Missing signature or webhook secret" },
       { status: 400 },
@@ -37,9 +36,7 @@ export async function POST(req: NextRequest) {
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(body, sig, WEBHOOK_SECRET);
-    console.log("Received Stripe webhook event:", event.type);
   } catch {
-    console.error("Webhook signature verification failed");
     return NextResponse.json(
       { error: "Webhook signature verification failed" },
       { status: 400 },
@@ -49,7 +46,6 @@ export async function POST(req: NextRequest) {
   try {
     switch (event.type) {
       case "checkout.session.completed": {
-        console.log("Handling checkout.session.completed event");
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.user_id;
         const customerId = session.customer as string;
@@ -59,7 +55,6 @@ export async function POST(req: NextRequest) {
         
         // If subscription is not on session (timing issue), fetch from customer
         if (!subscriptionId) {
-          console.log("Subscription not on session, fetching from customer");
           const subscriptions = await stripe.subscriptions.list({
             customer: customerId,
             limit: 1,
@@ -68,7 +63,6 @@ export async function POST(req: NextRequest) {
         }
 
         if (!subscriptionId) {
-          console.log("Could not find subscription for customer:", customerId);
           break;
         }
 
@@ -88,7 +82,6 @@ export async function POST(req: NextRequest) {
       }
 
       case "customer.subscription.created": {
-        console.log("Handling customer.subscription.created event");
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
         const userId = await getUserIdByCustomer(customerId);
@@ -113,7 +106,6 @@ export async function POST(req: NextRequest) {
       }
 
       case "customer.subscription.updated": {
-        console.log("Handling customer.subscription.updated event");
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
         const userId = await getUserIdByCustomer(customerId);
@@ -137,7 +129,6 @@ export async function POST(req: NextRequest) {
       }
 
       case "customer.subscription.deleted": {
-        console.log("Handling customer.subscription.deleted event");
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
         const userId = await getUserIdByCustomer(customerId);
@@ -156,13 +147,11 @@ export async function POST(req: NextRequest) {
       }
 
       case "invoice.payment_failed": {
-        console.log("Handling invoice.payment_failed event");
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;
         const userId = await getUserIdByCustomer(customerId);
         if (!userId) break;
 
-        console.log("Updating subscription status to past_due for user:", userId);
         await upsertSubscription(userId, { status: "past_due" });
         revalidatePath("/billing");
         revalidatePath("/pricing");
@@ -175,7 +164,6 @@ export async function POST(req: NextRequest) {
         break;
     }
   } catch (err) {
-    console.error("[stripe webhook] handler error:", err);
     return NextResponse.json(
       { error: "Internal error processing event" },
       { status: 500 },

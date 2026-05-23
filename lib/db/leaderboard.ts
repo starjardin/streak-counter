@@ -15,7 +15,6 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
   if (error) {
     // If the RPC has not been deployed yet, keep the page usable with an empty state.
     if (error.code === 'PGRST202') {
-      console.error('get_leaderboard RPC is missing in Supabase schema cache', error)
       return []
     }
 

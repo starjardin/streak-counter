@@ -30,7 +30,6 @@ export async function getReminderPreference(): Promise<ReminderPreference | null
   if (error) {
     if (isMissingReminderPreferencesTable(error)) {
       if (!hasLoggedMissingPreferencesTable) {
-        console.error('reminder_preferences table is missing in Supabase schema cache', error)
         hasLoggedMissingPreferencesTable = true
       }
       return null

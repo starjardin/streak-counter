@@ -120,7 +120,6 @@ export async function forgotPassword(
 
   // Avoid email enumeration: always return the same response to the UI.
   if (error) {
-    console.error("resetPasswordForEmail failed", error);
   }
 
   return "If an account exists for that email, we sent a password reset link.";

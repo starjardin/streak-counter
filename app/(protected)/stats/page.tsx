@@ -49,12 +49,7 @@ async function StatsContent() {
   const streaks = streaksResult.status === 'fulfilled' ? streaksResult.value : []
   const allDates = allDatesResult.status === 'fulfilled' ? allDatesResult.value : []
 
-  if (streaksResult.status === 'rejected') {
-    console.error('Failed to load streaks for stats page', streaksResult.reason)
-  }
-  if (allDatesResult.status === 'rejected') {
-    console.error('Failed to load check-ins for stats page', allDatesResult.reason)
-  }
+  if (streaksResult.status === 'rejected') {}
 
   // ── Stat cards ───────────────────────────────────────────────────────────────
   const totalStreaks = streaks.length

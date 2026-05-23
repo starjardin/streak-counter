@@ -126,7 +126,6 @@ Deno.serve(async (req: Request) => {
     .neq('frequency', 'none')
 
   if (error) {
-    console.error('Failed to fetch preferences:', error.message)
     return new Response(JSON.stringify({ error: error.message }), { status: 500 })
   }
 
@@ -157,7 +156,6 @@ Deno.serve(async (req: Request) => {
 
     const ok = await sendReminderEmail(email)
     if (ok) sent++
-    else console.error(`Failed to send email to ${email}`)
   }
 
   return new Response(JSON.stringify({ sent, skipped }), {

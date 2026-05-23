@@ -6,30 +6,40 @@ import { createClient } from "@/lib/supabase/server";
 import { stripe, STRIPE_PRO_PRICE_ID } from "@/lib/stripe";
 import { getSubscription, upsertSubscription } from "@/lib/db/subscriptions";
 
+async function getOrCreateStripeCustomer(userId: string, email: string | undefined): Promise<string> {
+  const sub = await getSubscription();
+
+  if (sub?.stripe_customer_id) {
+    try {
+      const customer = await stripe.customers.retrieve(sub.stripe_customer_id);
+      if (!customer.deleted) {
+        return sub.stripe_customer_id;
+      }
+    } catch {
+      // Customer not found in current Stripe mode — recreate
+    }
+    // Clear invalid customer ID
+    await upsertSubscription(userId, { stripe_customer_id: null });
+  }
+
+  // Create new customer
+  const customer = await stripe.customers.create({
+    email,
+    metadata: { user_id: userId },
+  });
+  await upsertSubscription(userId, { stripe_customer_id: customer.id });
+  return customer.id;
+}
+
 export async function createCheckoutSession(): Promise<string | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return "Not authenticated";
 
   const headersList = await headers();
   const origin = headersList.get("origin") ?? "http://localhost:3000";
 
-  // Reuse existing Stripe customer if we have one
-  let customerId: string | undefined;
-  const sub = await getSubscription();
-  if (sub?.stripe_customer_id) {
-    customerId = sub.stripe_customer_id;
-  } else {
-    const customer = await stripe.customers.create({
-      email: user.email,
-      metadata: { user_id: user.id },
-    });
-    customerId = customer.id;
-    // Persist customer id before redirecting to Stripe
-    await upsertSubscription(user.id, { stripe_customer_id: customerId });
-  }
+  const customerId = await getOrCreateStripeCustomer(user.id, user.email);
 
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
@@ -47,9 +57,7 @@ export async function createCheckoutSession(): Promise<string | null> {
 
 export async function createBillingPortalSession(): Promise<string | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return "Not authenticated";
 
   const headersList = await headers();

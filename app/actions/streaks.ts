@@ -24,7 +24,6 @@ export async function createStreakAction(
   // Enforce free-tier limit
   const subscription = await getSubscription();
 
-  console.log("Subscription in createStreakAction", subscription); // Debug log
   const isPro =
     subscription?.plan === "pro" && subscription?.status === "active";
   if (!isPro) {
