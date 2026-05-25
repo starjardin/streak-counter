@@ -1,52 +1,60 @@
-'use client'
+"use client";
 
-import { useEffect, useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import type { Tables } from '@/types/database.types'
+import { useEffect, useState, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { Tables } from "@/types/database.types";
 
-type StreakLog = Tables<'streak_logs'>
+type StreakLog = Tables<"streak_logs">;
 
 export function useStreakLogs(streakId: string) {
-  const [logs, setLogs] = useState<StreakLog[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [logs, setLogs] = useState<StreakLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchLogs = useCallback(async () => {
-    const supabase = createClient()
+    const supabase = createClient();
     const { data, error } = await supabase
-      .from('streak_logs')
-      .select('*')
-      .eq('streak_id', streakId)
-      .order('date', { ascending: false })
+      .from("streak_logs")
+      .select("*")
+      .eq("streak_id", streakId)
+      .order("date", { ascending: false });
 
     if (error) {
-      setError(error.message)
+      setError(error.message);
     } else {
-      setLogs(data)
+      setLogs(data);
     }
-    setLoading(false)
-  }, [streakId])
+    setLoading(false);
+  }, [streakId]);
 
   useEffect(() => {
-    if (!streakId) return
-    fetchLogs()
+    if (!streakId) return;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchLogs();
 
-    const supabase = createClient()
+    const supabase = createClient();
     const channel = supabase
       .channel(`streak_logs:${streakId}`)
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'streak_logs', filter: `streak_id=eq.${streakId}` },
-        fetchLogs
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "streak_logs",
+          filter: `streak_id=eq.${streakId}`,
+        },
+        fetchLogs,
       )
-      .subscribe()
+      .subscribe();
 
-    return () => { supabase.removeChannel(channel) }
-  }, [streakId, fetchLogs])
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [streakId, fetchLogs]);
 
   const todayLog = logs.find(
-    (l) => l.date === new Date().toISOString().split('T')[0]
-  )
+    (l) => l.date === new Date().toISOString().split("T")[0],
+  );
 
-  return { logs, todayLog, loading, error, refresh: fetchLogs }
+  return { logs, todayLog, loading, error, refresh: fetchLogs };
 }

@@ -19,3 +19,14 @@ export function getCheckInLabel(dateString: string) {
   if (diffDays === 1) return "Yesterday";
   return ` ${checkIn.format("MMMM D, YYYY")}`;
 }
+
+export function formatLastChecked(date: string | null) {
+  if (!date) return "Never";
+
+  const daysAgo = dayjs()
+    .startOf("day")
+    .diff(dayjs(date).startOf("day"), "day");
+  if (daysAgo <= 0) return "Today";
+  if (daysAgo === 1) return "Yesterday";
+  return `${daysAgo} days ago`;
+}

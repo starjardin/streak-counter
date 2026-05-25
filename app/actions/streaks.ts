@@ -21,7 +21,6 @@ export async function createStreakAction(
   if (!name) return "Streak name is required";
   if (name.length > 50) return "Streak name must be 50 characters or less";
 
-  // Enforce free-tier limit
   const subscription = await getSubscription();
 
   const isPro =

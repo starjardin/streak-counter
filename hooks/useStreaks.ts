@@ -57,9 +57,8 @@ export function useStreaks() {
   }, [])
 
   useEffect(() => {
+     // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchStreaks()
-
-    // Subscribe to realtime changes on this user's streaks
     const supabase = createClient()
     const channel = supabase
       .channel('streaks')

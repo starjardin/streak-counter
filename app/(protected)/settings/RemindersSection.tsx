@@ -47,7 +47,7 @@ export function RemindersSection({ current }: Props) {
         Email reminders
       </h2>
       <p className="text-sm text-gray-500 mb-5">
-        Get nudged when you haven't checked in yet.
+        Get nudged when you havenou&apos;t checked in yet.
       </p>
       <form action={action} className="space-y-3">
         {OPTIONS.map((opt) => (
