@@ -53,7 +53,6 @@ export async function POST(req: NextRequest) {
 
         let subscriptionId = session.subscription as string | null;
         
-        // If subscription is not on session (timing issue), fetch from customer
         if (!subscriptionId) {
           const subscriptions = await stripe.subscriptions.list({
             customer: customerId,
@@ -87,7 +86,6 @@ export async function POST(req: NextRequest) {
         const userId = await getUserIdByCustomer(customerId);
         if (!userId) break;
 
-        // On creation, subscription is always active/trialing
         const plan =
           subscription.status === "active" || subscription.status === "trialing"
             ? "pro"
