@@ -45,7 +45,11 @@ export function useStreakLogs(streakId: string) {
         },
         fetchLogs,
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === 'CHANNEL_ERROR' && err) {
+          console.error('Realtime subscription error:', err.message);
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);

@@ -14,7 +14,16 @@ export function useStreaks() {
 
   const fetchStreaks = useCallback(async () => {
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+
+    let user
+    try {
+      const { data } = await supabase.auth.getUser()
+      user = data.user
+    } catch {
+      setError('Failed to authenticate')
+      setLoading(false)
+      return
+    }
 
     if (!user) {
       setError('Not authenticated')
@@ -65,7 +74,11 @@ export function useStreaks() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'streaks' }, () => {
         fetchStreaks()
       })
-      .subscribe()
+      .subscribe((status, err) => {
+        if (status === 'CHANNEL_ERROR' && err) {
+          console.error('Realtime subscription error:', err.message)
+        }
+      })
 
     return () => { supabase.removeChannel(channel) }
   }, [fetchStreaks])

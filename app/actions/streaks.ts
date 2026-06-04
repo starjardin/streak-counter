@@ -21,19 +21,19 @@ export async function createStreakAction(
   if (!name) return "Streak name is required";
   if (name.length > 50) return "Streak name must be 50 characters or less";
 
-  const subscription = await getSubscription();
-
-  const isPro =
-    subscription?.plan === "pro" && subscription?.status === "active";
-  if (!isPro) {
-    const existing = await getStreaks();
-    if (existing.length >= FREE_TIER_STREAK_LIMIT) {
-      return `Free plan is limited to ${FREE_TIER_STREAK_LIMIT} streaks. Upgrade to Pro for unlimited streaks.`;
-    }
-  }
-
   let streakId: string;
   try {
+    const subscription = await getSubscription();
+
+    const isPro =
+      subscription?.plan === "pro" && subscription?.status === "active";
+    if (!isPro) {
+      const existing = await getStreaks();
+      if (existing.length >= FREE_TIER_STREAK_LIMIT) {
+        return `Free plan is limited to ${FREE_TIER_STREAK_LIMIT} streaks. Upgrade to Pro for unlimited streaks.`;
+      }
+    }
+
     const streak = await createStreak({ name });
     streakId = streak.id;
   } catch (err) {

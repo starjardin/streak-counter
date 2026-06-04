@@ -64,9 +64,8 @@ export async function upsertStreakLog(streakId: string, date: string, isChecked:
 /** All checked-in logs for the authenticated user across all their streaks. */
 export async function getAllCheckedLogs() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError) throw userError
   if (!user) throw new Error('Not authenticated')
 
   const { data, error } = await supabase

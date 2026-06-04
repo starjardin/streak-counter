@@ -26,7 +26,8 @@ export async function getStreak(id: string) {
 
 export async function createStreak(values: Omit<TablesInsert<'streaks'>, 'user_id'>) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError) throw userError
   if (!user) throw new Error('Not authenticated')
 
   const { data, error } = await supabase
@@ -70,12 +71,14 @@ export async function checkInStreak(id: string) {
   const today = new Date().toISOString().split('T')[0]
 
   // Check if already checked in today
-  const { data: existing } = await supabase
+  const { data: existing, error: existingError } = await supabase
     .from('streak_logs')
     .select('is_checked')
     .eq('streak_id', id)
     .eq('date', today)
     .maybeSingle()
+
+  if (existingError) throw existingError
 
   const { error: logError } = await supabase
     .from('streak_logs')

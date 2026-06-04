@@ -7,9 +7,8 @@ export type Subscription = Tables<"subscriptions">;
 /** Get the current user's subscription row (server, uses auth cookie). */
 export async function getSubscription(): Promise<Subscription | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
   if (!user) return null;
 
   const { data } = await supabase
@@ -39,11 +38,12 @@ export async function getUserIdByCustomer(
   customerId: string,
 ): Promise<string | null> {
   const supabase = createAdminClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("subscriptions")
     .select("user_id")
     .eq("stripe_customer_id", customerId)
     .maybeSingle();
 
+  if (error) throw error;
   return data?.user_id ?? null;
 }

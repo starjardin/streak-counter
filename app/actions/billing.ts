@@ -39,16 +39,26 @@ export async function createCheckoutSession(): Promise<string | null> {
   const headersList = await headers();
   const origin = headersList.get("origin") ?? "http://localhost:3000";
 
-  const customerId = await getOrCreateStripeCustomer(user.id, user.email);
+  let customerId: string;
+  try {
+    customerId = await getOrCreateStripeCustomer(user.id, user.email);
+  } catch {
+    return "Failed to set up billing customer";
+  }
 
-  const session = await stripe.checkout.sessions.create({
-    customer: customerId,
-    mode: "subscription",
-    line_items: [{ price: STRIPE_PRO_PRICE_ID, quantity: 1 }],
-    success_url: `${origin}/billing?success=1`,
-    cancel_url: `${origin}/pricing?canceled=1`,
-    metadata: { user_id: user.id },
-  });
+  let session;
+  try {
+    session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      mode: "subscription",
+      line_items: [{ price: STRIPE_PRO_PRICE_ID, quantity: 1 }],
+      success_url: `${origin}/billing?success=1`,
+      cancel_url: `${origin}/pricing?canceled=1`,
+      metadata: { user_id: user.id },
+    });
+  } catch {
+    return "Failed to create checkout session";
+  }
 
   if (!session.url) return "Failed to create checkout session";
 
@@ -63,13 +73,23 @@ export async function createBillingPortalSession(): Promise<string | null> {
   const headersList = await headers();
   const origin = headersList.get("origin") ?? "http://localhost:3000";
 
-  const sub = await getSubscription();
+  let sub;
+  try {
+    sub = await getSubscription();
+  } catch {
+    return "Failed to retrieve subscription";
+  }
   if (!sub?.stripe_customer_id) return "No billing account found";
 
-  const portal = await stripe.billingPortal.sessions.create({
-    customer: sub.stripe_customer_id,
-    return_url: `${origin}/billing`,
-  });
+  let portal;
+  try {
+    portal = await stripe.billingPortal.sessions.create({
+      customer: sub.stripe_customer_id,
+      return_url: `${origin}/billing`,
+    });
+  } catch {
+    return "Failed to create billing portal session";
+  }
 
   redirect(portal.url);
 }

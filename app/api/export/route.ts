@@ -16,9 +16,14 @@ function rowToCsv(values: (string | number | null)[]): string {
 
 export async function GET() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let user
+
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  } catch {
+    return new NextResponse('Unauthorized', { status: 401 })
+  }
 
   if (!user) {
     return new NextResponse('Unauthorized', { status: 401 })
