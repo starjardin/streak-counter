@@ -83,6 +83,7 @@ export type Database = {
       }
       streak_logs: {
         Row: {
+          checked_at: string | null
           created_at: string
           date: string
           id: string
@@ -90,6 +91,7 @@ export type Database = {
           streak_id: string
         }
         Insert: {
+          checked_at?: string | null
           created_at?: string
           date: string
           id?: string
@@ -97,6 +99,7 @@ export type Database = {
           streak_id: string
         }
         Update: {
+          checked_at?: string | null
           created_at?: string
           date?: string
           id?: string
@@ -117,27 +120,42 @@ export type Database = {
         Row: {
           count: number
           created_at: string
+          end_hour: number | null
+          end_minute: number | null
           id: string
           last_checked_date: string | null
           name: string
+          scheduled_hour: number | null
+          scheduled_minute: number | null
+          time_enforced: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
           count?: number
           created_at?: string
+          end_hour?: number | null
+          end_minute?: number | null
           id?: string
           last_checked_date?: string | null
           name: string
+          scheduled_hour?: number | null
+          scheduled_minute?: number | null
+          time_enforced?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
           count?: number
           created_at?: string
+          end_hour?: number | null
+          end_minute?: number | null
           id?: string
           last_checked_date?: string | null
           name?: string
+          scheduled_hour?: number | null
+          scheduled_minute?: number | null
+          time_enforced?: boolean
           updated_at?: string
           user_id?: string
         }

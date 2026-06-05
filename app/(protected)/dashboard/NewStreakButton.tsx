@@ -7,12 +7,24 @@ import { Button } from "@/components/Button";
 export function NewStreakButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
+  const [hasTime, setHasTime] = useState(false);
+  const [schedHour, setSchedHour] = useState(7);
+  const [schedMinute, setSchedMinute] = useState(30);
+  const [schedEndHour, setSchedEndHour] = useState(8);
+  const [schedEndMinute, setSchedEndMinute] = useState(0);
+  const [schedEnforced, setSchedEnforced] = useState(false);
   const [error, action, pending] = useActionState(createStreakAction, null);
 
   const handleClose = () => {
     if (pending) return;
     setIsOpen(false);
     setName("");
+    setHasTime(false);
+    setSchedHour(7);
+    setSchedMinute(30);
+    setSchedEndHour(8);
+    setSchedEndMinute(0);
+    setSchedEnforced(false);
   };
 
   return (
@@ -85,6 +97,98 @@ export function NewStreakButton() {
                     {name.length}/50
                   </span>
                 </div>
+              </div>
+
+              <div className="border-t border-gray-100 pt-3">
+                <label className="flex items-center gap-2 text-sm text-gray-900 font-medium">
+                  <input
+                    type="checkbox"
+                    name="has_scheduled_time"
+                    checked={hasTime}
+                    onChange={(e) => setHasTime(e.target.checked)}
+                    className="rounded border-gray-300"
+                  />
+                  Set a scheduled time
+                </label>
+
+                {hasTime && (
+                  <div className="mt-3 space-y-3 pl-6">
+                    <fieldset>
+                      <legend className="text-xs font-medium text-gray-700 mb-2">From</legend>
+                      <div className="flex gap-3">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Hour</label>
+                          <select
+                            name="scheduled_hour"
+                            value={schedHour}
+                            onChange={(e) => setSchedHour(Number(e.target.value))}
+                            className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                          >
+                            {Array.from({ length: 24 }, (_, i) => (
+                              <option key={i} value={i}>{String(i).padStart(2, "0")}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Minute</label>
+                          <select
+                            name="scheduled_minute"
+                            value={schedMinute}
+                            onChange={(e) => setSchedMinute(Number(e.target.value))}
+                            className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                          >
+                            {Array.from({ length: 60 }, (_, i) => (
+                              <option key={i} value={i}>{String(i).padStart(2, "0")}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </fieldset>
+
+                    <fieldset>
+                      <legend className="text-xs font-medium text-gray-700 mb-2">To</legend>
+                      <div className="flex gap-3">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Hour</label>
+                          <select
+                            name="end_hour"
+                            value={schedEndHour}
+                            onChange={(e) => setSchedEndHour(Number(e.target.value))}
+                            className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                          >
+                            {Array.from({ length: 24 }, (_, i) => (
+                              <option key={i} value={i}>{String(i).padStart(2, "0")}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Minute</label>
+                          <select
+                            name="end_minute"
+                            value={schedEndMinute}
+                            onChange={(e) => setSchedEndMinute(Number(e.target.value))}
+                            className="rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                          >
+                            {Array.from({ length: 60 }, (_, i) => (
+                              <option key={i} value={i}>{String(i).padStart(2, "0")}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </fieldset>
+
+                    <label className="flex items-center gap-2 text-sm text-gray-900">
+                      <input
+                        type="checkbox"
+                        name="time_enforced"
+                        checked={schedEnforced}
+                        onChange={(e) => setSchedEnforced(e.target.checked)}
+                        className="rounded border-gray-300"
+                      />
+                      Enforce exact time (±1 hour window)
+                    </label>
+                  </div>
+                )}
               </div>
 
               {error && (

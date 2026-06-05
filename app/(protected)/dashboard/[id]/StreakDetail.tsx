@@ -1,34 +1,28 @@
 "use client";
 
-import {
-  useState,
-  useEffect,
-  useRef,
-  useActionState,
-  startTransition,
-} from "react";
+import { useState, useEffect, useRef, useActionState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import confetti from "canvas-confetti";
 import {
   checkInAction,
-  updateStreakNameAction,
   deleteStreakAction,
 } from "@/app/actions/streaks";
 import { Calendar } from "./Calendar";
 import { DangerZone } from "./DangerZone";
 import { Form } from "./Form";
-import { CardName } from "./CardName";
+import { StreakInfo } from "./StreakInfo";
 import { Streak } from "./type";
 import { StatusCheckIn } from "./StatusCheckIn";
 
 interface Props {
   streak: Streak;
   checkedDates: string[];
+  onTimeDates: string[];
   todayChecked: boolean;
 }
 
-export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
+export function StreakDetail({ streak, checkedDates, onTimeDates, todayChecked }: Props) {
   const boundCheckIn = checkInAction.bind(null, streak.id);
   const [checkInError, checkInFormAction, checkInPending] = useActionState(
     boundCheckIn,
@@ -62,37 +56,6 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [todayChecked, checkInPending]);
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [nameInput, setNameInput] = useState(streak.name);
-  const nameInputRef = useRef<HTMLInputElement>(null);
-
-  const boundUpdateName = updateStreakNameAction.bind(null, streak.id);
-  const [nameError, nameFormAction, namePending] = useActionState(
-    boundUpdateName,
-    null,
-  );
-  const wasUpdatingName = useRef(false);
-
-  useEffect(() => {
-    if (wasUpdatingName.current && !namePending) {
-      if (nameError === null) {
-        startTransition(() => setIsEditing(false));
-        toast.success("Name updated!");
-      }
-    }
-    wasUpdatingName.current = namePending;
-  }, [namePending, nameError]);
-
-  const handleEditOpen = () => {
-    setIsEditing(true);
-    setTimeout(() => nameInputRef.current?.focus(), 0);
-  };
-
-  const handleEditCancel = () => {
-    setIsEditing(false);
-    setNameInput(streak.name);
-  };
-
   const [confirmDelete, setConfirmDelete] = useState(false);
   const boundDelete = deleteStreakAction.bind(null, streak.id);
   const [deleteError, deleteFormAction, deletePending] = useActionState(
@@ -107,6 +70,9 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
     }
     prevDeleteError.current = deleteError;
   }, [deleteError]);
+
+  const checkedSet = new Set(checkedDates);
+  const lateDates = checkedDates.filter((d) => !onTimeDates.includes(d));
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -129,19 +95,9 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
         </svg>
         Back to dashboard
       </Link>
-      {/* Name card */}
-      <CardName
-        streakName={streak.name}
-        isEditing={isEditing}
-        nameInput={nameInput}
-        setNameInput={setNameInput}
-        nameError={nameError}
-        namePending={namePending}
-        handleEditOpen={handleEditOpen}
-        handleEditCancel={handleEditCancel}
-        nameFormAction={nameFormAction}
-        nameInputRef={nameInputRef}
-      />
+
+      <StreakInfo streak={streak} />
+
       {/* Stats + check-in card */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <StatusCheckIn streak={streak} />
@@ -152,7 +108,8 @@ export function StreakDetail({ streak, checkedDates, todayChecked }: Props) {
           checkInButtonRef={checkInButtonRef}
         />
       </div>
-      <Calendar checkedDates={checkedDates} />
+
+      <Calendar checkedDates={checkedSet} lateDates={new Set(lateDates)} />
       <DangerZone
         confirmDelete={confirmDelete}
         setConfirmDelete={setConfirmDelete}

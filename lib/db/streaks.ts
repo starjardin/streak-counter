@@ -64,11 +64,59 @@ export async function deleteStreak(id: string) {
 }
 
 /**
+ * Convert hour+minute to total minutes from midnight.
+ */
+function toMinutes(hour: number, minute: number) {
+  return hour * 60 + minute
+}
+
+/**
+ * Check if any streak by the same user has a time range overlapping
+ * the given start-to-end window. Pass `excludeId` when editing.
+ */
+export async function getStreakBySchedule(
+  hour: number,
+  minute: number,
+  endHour: number,
+  endMinute: number,
+  excludeId?: string,
+) {
+  const supabase = await createClient()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError) throw userError
+  if (!user) return null
+
+  const { data, error } = await supabase
+    .from('streaks')
+    .select('id, name, scheduled_hour, scheduled_minute, end_hour, end_minute')
+    .eq('user_id', user.id)
+    .not('scheduled_hour', 'is', null)
+    .not('scheduled_minute', 'is', null)
+
+  if (error) throw error
+
+  const startMin = toMinutes(hour, minute)
+  const endMin = toMinutes(endHour, endMinute)
+
+  const conflict = data?.find((s) => {
+    if (excludeId && s.id === excludeId) return false
+    const sStart = toMinutes(s.scheduled_hour!, s.scheduled_minute!)
+    const sEnd = s.end_hour !== null && s.end_minute !== null
+      ? toMinutes(s.end_hour, s.end_minute)
+      : sStart + 60 // fallback: 1-hour window
+    return startMin < sEnd && sStart < endMin
+  })
+
+  return conflict ?? null
+}
+
+/**
  * Check in for today: upserts today's log and increments count if not already done.
  */
 export async function checkInStreak(id: string) {
   const supabase = await createClient()
   const today = new Date().toISOString().split('T')[0]
+  const now = new Date().toISOString()
 
   // Check if already checked in today
   const { data: existing, error: existingError } = await supabase
@@ -82,7 +130,10 @@ export async function checkInStreak(id: string) {
 
   const { error: logError } = await supabase
     .from('streak_logs')
-    .upsert({ streak_id: id, date: today, is_checked: true }, { onConflict: 'streak_id,date' })
+    .upsert(
+      { streak_id: id, date: today, is_checked: true, checked_at: now },
+      { onConflict: 'streak_id,date' },
+    )
 
   if (logError) throw logError
 

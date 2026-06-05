@@ -4,20 +4,25 @@ import dayjs from "dayjs";
 const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 interface CalendarProps {
-  checkedDates: string[];
+  checkedDates: Set<string>;
+  lateDates: Set<string>;
 }
 
-function getDayClass(isChecked: boolean, missedAndNotToday: boolean): string {
+function getDayClass(
+  isChecked: boolean,
+  isLate: boolean,
+  missedAndNotToday: boolean,
+): string {
+  if (isLate) return "bg-amber-400 text-white";
   if (isChecked) return "bg-green-500 text-white";
-  if (missedAndNotToday && !isChecked) return "bg-red-300 text-white";
+  if (missedAndNotToday) return "bg-red-300 text-white";
   return "";
 }
 
-export const Calendar = ({ checkedDates }: CalendarProps) => {
+export const Calendar = ({ checkedDates, lateDates }: CalendarProps) => {
   const { user, loading } = useAuth();
   const today = dayjs();
   const todayStr = today.format("YYYY-MM-DD");
-  const checkedSet = new Set(checkedDates);
   const days = Array.from({ length: 30 }, (_, i) =>
     today.subtract(29 - i, "day"),
   );
@@ -51,6 +56,7 @@ export const Calendar = ({ checkedDates }: CalendarProps) => {
       </div>
     );
   }
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
       <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">
@@ -74,7 +80,8 @@ export const Calendar = ({ checkedDates }: CalendarProps) => {
         ))}
         {days.map((day) => {
           const dateStr = day.format("YYYY-MM-DD");
-          const isChecked = checkedSet.has(dateStr);
+          const isChecked = checkedDates.has(dateStr);
+          const isLate = lateDates.has(dateStr);
           const isToday = dateStr === todayStr;
           const missed = day.isAfter(user?.created_at, "day");
           const missedAndNotToday = missed && !isToday;
@@ -84,7 +91,7 @@ export const Calendar = ({ checkedDates }: CalendarProps) => {
               title={day.format("MMM D, YYYY")}
               className={[
                 "aspect-square bg-gray-100 text-gray-400 rounded-md flex items-center justify-center text-xs font-medium transition-colors",
-                getDayClass(isChecked, missedAndNotToday),
+                getDayClass(isChecked, isLate, missedAndNotToday),
                 isToday ? "ring-2 ring-blue-500 ring-offset-1" : "",
               ].join(" ")}
             >
@@ -97,10 +104,14 @@ export const Calendar = ({ checkedDates }: CalendarProps) => {
       <div className="flex items-center gap-4 mt-4 text-xs text-gray-500">
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-green-500 inline-block" />
-          Checked in
+          On time
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-gray-100 inline-block" />
+          <span className="w-3 h-3 rounded-sm bg-amber-400 inline-block" />
+          Late
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm bg-red-300 inline-block" />
           Missed
         </span>
         <span className="flex items-center gap-1.5">

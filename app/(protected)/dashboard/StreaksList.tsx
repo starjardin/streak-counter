@@ -125,6 +125,16 @@ export function StreaksList() {
                         : "Never"}
                     </p>
                   </div>
+
+                  {streak.scheduled_hour !== null && (
+                    <div>
+                      <p className="text-gray-500">Scheduled</p>
+                      <p className="text-gray-900 font-medium mt-0.5">
+                        {`${String(streak.scheduled_hour).padStart(2, "0")}:${String(streak.scheduled_minute).padStart(2, "0")}`}
+                        {streak.end_hour !== null && ` – ${String(streak.end_hour).padStart(2, "0")}:${String(streak.end_minute).padStart(2, "0")}`}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </Link>
 
