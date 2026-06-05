@@ -2,10 +2,28 @@ import { logout } from "@/app/actions/auth";
 import Link from "next/link";
 import { StreaksList } from "./StreaksList";
 import { NewStreakButton } from "./NewStreakButton";
-import { UserEmail } from "./UserEmail";
+import { UserAvatar } from "./UserAvatar";
 import { Button } from "@/components/Button";
+import { isCurrentUserAdmin } from "@/lib/db/users";
+import { createClient } from "@/lib/supabase/server";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const supabase = await createClient();
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const admin = await isCurrentUserAdmin();
+
+  let displayName = authUser?.email ?? "Unknown user";
+  if (authUser) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("username")
+      .eq("id", authUser.id)
+      .single();
+    if (profile?.username) {
+      displayName = profile.username;
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -46,10 +64,15 @@ export default function DashboardPage() {
               >
                 Settings
               </Link>
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Logged in as</p>
-                <UserEmail />
-              </div>
+              {admin && (
+                <Link
+                  href="/admin"
+                  className="text-sm font-medium text-red-600 hover:text-red-800 transition-colors"
+                >
+                  Admin
+                </Link>
+              )}
+              <UserAvatar displayName={displayName} />
               <form action={logout}>
                 <Button
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"

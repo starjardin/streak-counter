@@ -73,6 +73,8 @@ export async function signup(_prevState: string | null, formData: FormData) {
 
   if (!appUrl) return "App URL is not configured. Set APP_URL.";
 
+  const username = ((formData.get("username") as string | null) ?? "").trim();
+
   const { data, error } = await supabase.auth.signUp({
     email: formData.get("email") as string,
     password: formData.get("password") as string,
@@ -83,7 +85,21 @@ export async function signup(_prevState: string | null, formData: FormData) {
 
   if (error) return error.message;
 
-  // Email confirmation required — session is null until user confirms
+  // Save username to public.users
+  if (username && data.user) {
+    try {
+      const adminClient = await import("@/lib/supabase/admin").then((m) =>
+        m.createAdminClient(),
+      );
+      await adminClient
+        .from("users")
+        .update({ username })
+        .eq("id", data.user.id);
+    } catch {
+      // non-critical — username is a display preference
+    }
+  }
+
   if (!data.session) redirect("/signup/confirm");
 
   redirect("/dashboard");
