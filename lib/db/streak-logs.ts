@@ -18,7 +18,7 @@ export async function getRecentStreakLogs(streakId: string, days: number) {
   const from = new Date(Date.now() - (days - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   const { data, error } = await supabase
     .from('streak_logs')
-    .select('date, is_checked, checked_at')
+    .select('date, is_checked, checked_at, note')
     .eq('streak_id', streakId)
     .eq('is_checked', true)
     .gte('date', from)

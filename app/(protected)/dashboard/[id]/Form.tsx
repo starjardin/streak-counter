@@ -1,4 +1,6 @@
-import { RefObject } from "react";
+"use client";
+
+import { RefObject, useState } from "react";
 import { Button } from "@/components/Button";
 
 interface FormProps {
@@ -14,8 +16,15 @@ export const Form = ({
   checkInPending,
   checkInButtonRef,
 }: FormProps) => {
+  const [note, setNote] = useState("");
+
+  const handleSubmit = (formData: FormData) => {
+    formData.set("note", note);
+    checkInFormAction(formData);
+  };
+
   return (
-    <form action={checkInFormAction}>
+    <form action={handleSubmit}>
       {todayChecked ? (
         <div className="flex items-center gap-3 px-6 py-4 bg-green-50 border border-green-200 rounded-xl">
           <svg
@@ -39,7 +48,15 @@ export const Form = ({
           </div>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
+          <textarea
+            name="note"
+            placeholder="What did you do today? (optional)"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            rows={2}
+          />
           <Button
             ref={checkInButtonRef}
             type="submit"

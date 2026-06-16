@@ -53,6 +53,12 @@ export default async function DashboardPage() {
                 Leaderboard
               </Link>
               <Link
+                href="/friends"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Friends
+              </Link>
+              <Link
                 href="/billing"
                 className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
               >

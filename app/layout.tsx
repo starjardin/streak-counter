@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/context/AuthProvider";
+import { PwaRegister } from "./PwaRegister";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,6 +19,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Streak Counter",
   description: "Track your daily streaks",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Streak Counter",
+  },
 };
 
 export default function RootLayout({
@@ -34,6 +41,7 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <AuthProvider>{children}</AuthProvider>
         </Suspense>
+        <PwaRegister />
         <Toaster position="bottom-center" toastOptions={{ duration: 4000 }} />
       </body>
     </html>

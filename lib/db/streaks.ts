@@ -1,5 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
+import { getRemainingFreezes, useFreeze } from '@/lib/db/streak-freezes'
 import type { TablesInsert, TablesUpdate } from '@/types/database.types'
+
+const GRACE_PERIOD_DAYS = 2
 
 export async function getStreaks() {
   const supabase = await createClient()
@@ -63,17 +66,10 @@ export async function deleteStreak(id: string) {
   if (error) throw error
 }
 
-/**
- * Convert hour+minute to total minutes from midnight.
- */
 function toMinutes(hour: number, minute: number) {
   return hour * 60 + minute
 }
 
-/**
- * Check if any streak by the same user has a time range overlapping
- * the given start-to-end window. Pass `excludeId` when editing.
- */
 export async function getStreakBySchedule(
   hour: number,
   minute: number,
@@ -103,22 +99,22 @@ export async function getStreakBySchedule(
     const sStart = toMinutes(s.scheduled_hour!, s.scheduled_minute!)
     const sEnd = s.end_hour !== null && s.end_minute !== null
       ? toMinutes(s.end_hour, s.end_minute)
-      : sStart + 60 // fallback: 1-hour window
+      : sStart + 60
     return startMin < sEnd && sStart < endMin
   })
 
   return conflict ?? null
 }
 
-/**
- * Check in for today: upserts today's log and increments count if not already done.
- */
-export async function checkInStreak(id: string) {
+export async function checkInStreak(id: string, note?: string) {
   const supabase = await createClient()
   const today = new Date().toISOString().split('T')[0]
   const now = new Date().toISOString()
 
-  // Check if already checked in today
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError) throw userError
+  if (!user) throw new Error('Not authenticated')
+
   const { data: existing, error: existingError } = await supabase
     .from('streak_logs')
     .select('is_checked')
@@ -131,7 +127,7 @@ export async function checkInStreak(id: string) {
   const { error: logError } = await supabase
     .from('streak_logs')
     .upsert(
-      { streak_id: id, date: today, is_checked: true, checked_at: now },
+      { streak_id: id, date: today, is_checked: true, checked_at: now, note: note ?? null },
       { onConflict: 'streak_id,date' },
     )
 
@@ -139,6 +135,41 @@ export async function checkInStreak(id: string) {
 
   if (!existing?.is_checked) {
     const current = await getStreak(id)
+
+    if (current.last_checked_date) {
+      const lastDate = new Date(current.last_checked_date)
+      const todayDate = new Date(today)
+      const diffTime = Math.abs(todayDate.getTime() - lastDate.getTime())
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+      if (diffDays > GRACE_PERIOD_DAYS + 1) {
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('plan, status, free_trial_end')
+          .eq('user_id', user.id)
+          .maybeSingle()
+
+        const isProOrTrial =
+          sub?.plan === 'pro' && (sub?.status === 'active' || sub?.status === 'trialing')
+
+        if (isProOrTrial) {
+          const remaining = await getRemainingFreezes(user.id)
+          if (remaining > 0) {
+            await useFreeze(user.id, id, today)
+            return updateStreak(id, {
+              count: current.count + 1,
+              last_checked_date: today,
+            })
+          }
+        }
+
+        return updateStreak(id, {
+          count: 1,
+          last_checked_date: today,
+        })
+      }
+    }
+
     return updateStreak(id, {
       count: current.count + 1,
       last_checked_date: today,

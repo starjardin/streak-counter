@@ -4,12 +4,39 @@ import type { Tables } from "@/types/database.types";
 
 export type Subscription = Tables<"subscriptions">;
 
+async function expireTrialIfNeeded(userId: string): Promise<void> {
+  try {
+    const supabase = createAdminClient();
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("free_trial_end, plan, status")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!sub) return;
+    if (sub.plan !== "pro" || sub.status !== "trialing") return;
+    if (!sub.free_trial_end) return;
+
+    if (new Date(sub.free_trial_end) < new Date()) {
+      await supabase
+        .from("subscriptions")
+        .update({ plan: "free", status: "active", free_trial_end: null })
+        .eq("user_id", userId);
+    }
+  } catch {
+    // Admin client may not be available (missing SUPABASE_SECRET_KEY).
+    // The trial expiry check is best-effort.
+  }
+}
+
 /** Get the current user's subscription row (server, uses auth cookie). */
 export async function getSubscription(): Promise<Subscription | null> {
   const supabase = await createClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError) throw userError;
   if (!user) return null;
+
+  await expireTrialIfNeeded(user.id);
 
   const { data } = await supabase
     .from("subscriptions")

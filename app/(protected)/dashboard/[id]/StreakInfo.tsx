@@ -3,7 +3,7 @@
 import { Button } from "@/components/Button";
 import { Streak } from "./type";
 import { useState, useRef, useEffect, useActionState, startTransition } from "react";
-import { updateStreakInfoAction } from "@/app/actions/streaks";
+import { updateStreakInfoAction, toggleVisibilityAction } from "@/app/actions/streaks";
 import toast from "react-hot-toast";
 
 function formatTime(hour: number | null, minute: number | null) {
@@ -20,9 +20,10 @@ function formatRange(streak: Streak) {
 
 interface StreakInfoProps {
   streak: Streak;
+  username: string;
 }
 
-export function StreakInfo({ streak }: StreakInfoProps) {
+export function StreakInfo({ streak, username }: StreakInfoProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [nameInput, setNameInput] = useState(streak.name);
 
@@ -219,41 +220,75 @@ export function StreakInfo({ streak }: StreakInfoProps) {
           </div>
         </form>
       ) : (
-        <div className="flex items-start gap-3">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-gray-900">
-              {streak.name}
-            </h1>
-            {range && (
-              <p className="text-sm text-gray-500 mt-1">
-                {range}
-                {streak.time_enforced && (
-                  <span className="ml-2 text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
-                    Enforced
-                  </span>
-                )}
-              </p>
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold text-gray-900">
+                {streak.name}
+              </h1>
+              {range && (
+                <p className="text-sm text-gray-500 mt-1">
+                  {range}
+                  {streak.time_enforced && (
+                    <span className="ml-2 text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                      Enforced
+                    </span>
+                  )}
+                </p>
+              )}
+            </div>
+            <Button
+              onClick={handleEditOpen}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors shrink-0"
+              aria-label="Edit streak"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-1.414.93l-3.414.656.656-3.414a4 4 0 01.93-1.414z"
+                />
+              </svg>
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-3 pt-1">
+            <form
+              action={async () => {
+                const { error } = await toggleVisibilityAction(streak.id, !streak.is_public);
+                if (error) toast.error(error);
+              }}
+            >
+              <button type="submit" className="flex items-center gap-2 cursor-pointer">
+                <div className="relative">
+                  <div className={`w-9 h-5 rounded-full transition-colors ${streak.is_public ? 'bg-blue-600' : 'bg-gray-200'}`} />
+                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${streak.is_public ? 'left-[18px]' : 'left-0.5'}`} />
+                </div>
+                <span className="text-sm text-gray-700">
+                  {streak.is_public ? "Public" : "Private"}
+                </span>
+              </button>
+            </form>
+            {streak.is_public && (
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/u/${username}`)
+                    .then(() => toast.success("Link copied!"))
+                    .catch(() => toast.error("Failed to copy link"))
+                }}
+                className="text-xs text-blue-600 hover:text-blue-800 underline"
+              >
+                Copy profile link
+              </button>
             )}
           </div>
-          <Button
-            onClick={handleEditOpen}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors shrink-0"
-            aria-label="Edit streak"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-1.414.93l-3.414.656.656-3.414a4 4 0 01.93-1.414z"
-              />
-            </svg>
-          </Button>
         </div>
       )}
     </div>

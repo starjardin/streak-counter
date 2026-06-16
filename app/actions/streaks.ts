@@ -49,6 +49,8 @@ export async function createStreakAction(
   if (!name) return "Streak name is required";
   if (name.length > 50) return "Streak name must be 50 characters or less";
 
+  const categoryId = (formData.get("category_id") as string | null) || null;
+
   const schedule = parseSchedule(formData);
 
   // Check for conflicting time ranges
@@ -82,7 +84,7 @@ export async function createStreakAction(
       }
     }
 
-    const streak = await createStreak({ name, ...schedule });
+    const streak = await createStreak({ name, category_id: categoryId, ...schedule });
     streakId = streak.id;
   } catch (err) {
     if (err instanceof Error) return err.message;
@@ -150,10 +152,11 @@ export async function updateStreakScheduleAction(
 export async function checkInAction(
   streakId: string,
   _prevState: string | null,
-  _formData: FormData,
+  formData: FormData,
 ): Promise<string | null> {
+  const note = (formData.get("note") as string | null)?.trim() || undefined;
   try {
-    await checkInStreak(streakId);
+    await checkInStreak(streakId, note);
   } catch (err) {
     if (err instanceof Error) return err.message;
     return "Failed to check in";
@@ -241,6 +244,20 @@ export async function updateStreakNameAction(
   }
   revalidatePath(`/dashboard/${streakId}`);
   return null;
+}
+
+export async function toggleVisibilityAction(
+  streakId: string,
+  isPublic: boolean,
+) {
+  try {
+    await updateStreak(streakId, { is_public: isPublic })
+  } catch (err) {
+    if (err instanceof Error) return { error: err.message }
+    return { error: 'Failed to update visibility' }
+  }
+  revalidatePath(`/dashboard/${streakId}`)
+  return { error: null }
 }
 
 export async function deleteStreakAction(

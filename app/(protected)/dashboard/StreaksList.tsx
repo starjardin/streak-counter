@@ -3,6 +3,7 @@
 import { Button } from "@/components/Button";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { useStreaks } from "@/hooks/useStreaks";
+import { OnboardingBanner } from "./OnboardingBanner";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Link from "next/link";
@@ -88,6 +89,7 @@ export function StreaksList() {
 
   return (
     <div className="space-y-3">
+      <OnboardingBanner streakCount={streaks.length} />
       {deletionError && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3">
           <p className="text-red-800 text-sm">{deletionError}</p>

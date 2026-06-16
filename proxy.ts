@@ -9,6 +9,8 @@ const PROTECTED_PREFIX = [
   '/settings',
   '/billing',
   '/pricing',
+  '/u',
+  '/friends',
 ]
 
 export async function proxy(request: NextRequest) {

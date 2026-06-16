@@ -17,12 +17,18 @@ import { StatusCheckIn } from "./StatusCheckIn";
 
 interface Props {
   streak: Streak;
+  username: string;
   checkedDates: string[];
   onTimeDates: string[];
   todayChecked: boolean;
+  isPro: boolean;
+  isTrialing: boolean;
+  freezesRemaining: number;
+  trialEnds: string | null;
+  notesByDate: Record<string, string>;
 }
 
-export function StreakDetail({ streak, checkedDates, onTimeDates, todayChecked }: Props) {
+export function StreakDetail({ streak, username, checkedDates, onTimeDates, todayChecked, isPro, isTrialing, freezesRemaining, trialEnds, notesByDate }: Props) {
   const boundCheckIn = checkInAction.bind(null, streak.id);
   const [checkInError, checkInFormAction, checkInPending] = useActionState(
     boundCheckIn,
@@ -96,11 +102,11 @@ export function StreakDetail({ streak, checkedDates, onTimeDates, todayChecked }
         Back to dashboard
       </Link>
 
-      <StreakInfo streak={streak} />
+      <StreakInfo streak={streak} username={username} />
 
       {/* Stats + check-in card */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <StatusCheckIn streak={streak} />
+        <StatusCheckIn streak={streak} isPro={isPro} isTrialing={isTrialing} freezesRemaining={freezesRemaining} trialEnds={trialEnds} />
         <Form
           checkInFormAction={checkInFormAction}
           todayChecked={todayChecked}
@@ -109,7 +115,7 @@ export function StreakDetail({ streak, checkedDates, onTimeDates, todayChecked }
         />
       </div>
 
-      <Calendar checkedDates={checkedSet} lateDates={new Set(lateDates)} />
+      <Calendar checkedDates={checkedSet} lateDates={new Set(lateDates)} streakCreatedAt={streak.created_at} notesByDate={notesByDate} />
       <DangerZone
         confirmDelete={confirmDelete}
         setConfirmDelete={setConfirmDelete}

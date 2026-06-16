@@ -1,12 +1,15 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { createStreakAction } from "@/app/actions/streaks";
+import { getCategoriesAction } from "@/app/actions/categories";
 import { Button } from "@/components/Button";
 
 export function NewStreakButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [categories, setCategories] = useState<{ id: string; name: string; color: string }[]>([]);
   const [hasTime, setHasTime] = useState(false);
   const [schedHour, setSchedHour] = useState(7);
   const [schedMinute, setSchedMinute] = useState(30);
@@ -14,6 +17,10 @@ export function NewStreakButton() {
   const [schedEndMinute, setSchedEndMinute] = useState(0);
   const [schedEnforced, setSchedEnforced] = useState(false);
   const [error, action, pending] = useActionState(createStreakAction, null);
+
+  useEffect(() => {
+    getCategoriesAction().then(setCategories);
+  }, []);
 
   const handleClose = () => {
     if (pending) return;
@@ -97,6 +104,29 @@ export function NewStreakButton() {
                     {name.length}/50
                   </span>
                 </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="streak-category"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Category <span className="text-gray-400">(optional)</span>
+                </label>
+                <select
+                  id="streak-category"
+                  name="category_id"
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">No category</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="border-t border-gray-100 pt-3">

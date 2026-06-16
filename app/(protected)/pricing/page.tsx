@@ -77,6 +77,7 @@ export default async function PricingPage() {
                 "Daily check-ins",
                 "Basic streak history (30 days)",
                 "Email reminders",
+                "2-day grace on missed check-ins",
               ].map((f) => (
                 <li
                   key={f}
@@ -142,6 +143,7 @@ export default async function PricingPage() {
               {[
                 "Unlimited streaks",
                 "Everything in Free",
+                "Streak protection (5 freezes/mo)",
                 "Full stats & yearly heatmap",
                 "Leaderboard access",
                 "Priority support",
@@ -173,7 +175,7 @@ export default async function PricingPage() {
                 href="/signup"
                 className="w-full text-center py-3 rounded-xl bg-blue-600 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
               >
-                Start free trial
+                Start 7-day free trial
               </Link>
             ) : isPro ? (
               <Link
