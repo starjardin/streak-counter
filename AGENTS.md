@@ -64,6 +64,8 @@ SUPABASE_SECRET_KEY=
 STRIPE_SECRET_KEY=
 STRIPE_PRO_PRICE_ID=
 STRIPE_WEBHOOK_SECRET=
+POSTMARK_SMTP_API_TOKEN=
+POSTMARK_FROM_EMAIL=
 ```
 
 The app URL for auth redirects is resolved in `getAppUrl()` (`app/actions/auth.ts`) — it checks (in order): `APP_URL`, `NEXT_PUBLIC_APP_URL`, `VERCEL_PROJECT_PRODUCTION_URL`, `VERCEL_URL`, then falls back to request `origin` / `host` headers.
