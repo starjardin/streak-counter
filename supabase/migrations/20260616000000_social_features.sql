@@ -204,7 +204,7 @@ as $$
   join public.users u on u.id = s.user_id
   where f.follower_id = current_user_id
     and f.status = 'friends'
-    and (s.last_checked_date is null or s.last_checked_date < current_date::text)
+    and (s.last_checked_date is null or s.last_checked_date::date < current_date)
     and s.count > 0
   order by s.last_checked_date asc nulls first;
 $$;

@@ -62,7 +62,9 @@ as $$
   order by s.last_checked_date asc nulls first;
 $$;
 
-create or replace function public.get_friend_leaderboard(current_user_id uuid)
+drop function if exists public.get_friend_leaderboard(uuid);
+
+create function public.get_friend_leaderboard(current_user_id uuid)
 returns table (
   rank bigint,
   user_id uuid,
