@@ -73,11 +73,32 @@ export async function signup(_prevState: string | null, formData: FormData) {
 
   if (!appUrl) return "App URL is not configured. Set APP_URL.";
 
+  const email = (formData.get("email") as string).trim();
   const username = ((formData.get("username") as string | null) ?? "").trim();
+  const password = formData.get("password") as string;
+
+  // Check for duplicate email before calling signUp (Supabase doesn't error on
+  // existing identities for security reasons, so we handle UX ourselves).
+  try {
+    const adminClient = await import("@/lib/supabase/admin").then((m) =>
+      m.createAdminClient(),
+    );
+    const { data: existing } = await adminClient
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existing) {
+      return "An account with this email already exists. Try logging in instead.";
+    }
+  } catch {
+    // Non-critical — proceed; Supabase will still enforce uniqueness.
+  }
 
   const { data, error } = await supabase.auth.signUp({
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
+    email,
+    password,
     options: {
       emailRedirectTo: `${appUrl}/login`,
     },
