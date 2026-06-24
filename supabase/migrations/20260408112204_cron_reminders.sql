@@ -26,7 +26,7 @@ select cron.schedule(
   '0 9 * * *',   -- every day at 09:00 UTC
   $$
   select net.http_post(
-    url     := 'https://<YOUR_PROJECT_REF>.supabase.co/functions/v1/send-reminders',
+     url     := 'https://odhdyzexafjsqzttuqom.supabase.co/functions/v1/send-reminders',
     headers := jsonb_build_object(
       'Content-Type',  'application/json',
       'Authorization', 'Bearer ' || current_setting('app.service_role_key', true)
@@ -41,3 +41,4 @@ select cron.schedule(
 -- the key to git):
 --
 --   alter database postgres set app.service_role_key = '<YOUR_SERVICE_ROLE_KEY>';
+-- (Get the key from: Supabase Dashboard > Project Settings > API > service_role key)

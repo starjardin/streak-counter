@@ -2,8 +2,9 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!
-const FROM_EMAIL = Deno.env.get('FROM_EMAIL') ?? 'reminders@yourdomain.com'
+const POSTMARK_TOKEN = Deno.env.get('POSTMARK_SMTP_API_TOKEN')!
+const FROM_EMAIL = Deno.env.get('POSTMARK_FROM_EMAIL') ?? 'tantely.and@onja.org'
+const APP_URL = Deno.env.get('NEXT_PUBLIC_APP_URL') ?? 'https://streak-counter-dev.vercel.app'
 
 type Frequency = 'daily' | 'three_per_week' | 'weekly'
 
@@ -59,32 +60,32 @@ async function checkedInThisWeek(
 }
 
 async function sendReminderEmail(to: string): Promise<boolean> {
-  const res = await fetch('https://api.resend.com/emails', {
+  const res = await fetch('https://api.postmarkapp.com/email', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${RESEND_API_KEY}`,
+      'X-Postmark-Server-Token': POSTMARK_TOKEN,
     },
     body: JSON.stringify({
-      from: `Streak Counter <${FROM_EMAIL}>`,
-      to,
-      subject: "🔥 Don't break your streak today!",
-      html: `
+      From: FROM_EMAIL,
+      To: to,
+      Subject: "Don't break your streak today!",
+      HtmlBody: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 16px">
-          <h1 style="font-size:24px;margin-bottom:8px">Keep the streak alive! 🔥</h1>
+          <h1 style="font-size:24px;margin-bottom:8px">Keep the streak alive!</h1>
           <p style="color:#4b5563;line-height:1.6">
             You haven't checked in on your streaks yet today. Head over to
             Streak Counter and keep your momentum going!
           </p>
           <a
-            href="${Deno.env.get('NEXT_PUBLIC_APP_URL') ?? 'https://yourapp.com'}/dashboard"
+            href="${APP_URL}/dashboard"
             style="display:inline-block;margin-top:24px;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600"
           >
-            Check in now →
+            Check in now
           </a>
           <p style="margin-top:32px;font-size:12px;color:#9ca3af">
             You're receiving this because you enabled reminders in your Streak Counter
-            settings. <a href="${Deno.env.get('NEXT_PUBLIC_APP_URL') ?? 'https://yourapp.com'}/settings" style="color:#6b7280">Manage preferences</a>.
+            settings. <a href="${APP_URL}/settings" style="color:#6b7280">Manage preferences</a>.
           </p>
         </div>
       `,
@@ -95,14 +96,8 @@ async function sendReminderEmail(to: string): Promise<boolean> {
 }
 
 Deno.serve(async (req: Request) => {
-  // Only accept POST from our cron job (authenticated with service-role key)
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 })
-  }
-
-  const auth = req.headers.get('Authorization')
-  if (auth !== `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`) {
-    return new Response('Unauthorized', { status: 401 })
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {

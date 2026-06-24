@@ -43,7 +43,7 @@ No testing framework or pre-commit hooks detected.
 - Leaderboard via `get_leaderboard()` RPC (security definer)
 
 ### Edge functions
-- `supabase/functions/send-reminders/` — Deno-based, uses Resend for email, invoked via cron with `SUPABASE_SERVICE_ROLE_KEY` auth header.
+- `supabase/functions/send-reminders/` — Deno-based, uses Postmark API for email, invoked via cron (no JWT verification).
 
 ### Migrations
 In `supabase/migrations/`, named `YYYYMMDDHHMMSS_description.sql`. Apply with `supabase db push`.
@@ -54,18 +54,29 @@ In `supabase/migrations/`, named `YYYYMMDDHHMMSS_description.sql`. Apply with `s
 - Tailwind v4 uses `@import "tailwindcss"` with `@theme inline` (no `tailwind.config` file)
 - PostCSS uses `@tailwindcss/postcss` plugin
 - Stripe API version pinned to `2026-04-22.dahlia`
-- `supabase/config.toml` has `enable_confirmations = false` (no email confirmation needed locally)
+- `supabase/config.toml` has `enable_confirmations = true` (email confirmation required)
+- Postmark SMTP credentials must be set in **Supabase Dashboard > Authentication > Settings > SMTP Settings** for production — `config.toml` only applies locally
 
 ## Env vars required
+
+### Next.js app (.env.local)
 ```
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SECRET_KEY=
+NEXT_PUBLIC_APP_URL=
 STRIPE_SECRET_KEY=
 STRIPE_PRO_PRICE_ID=
 STRIPE_WEBHOOK_SECRET=
 POSTMARK_SMTP_API_TOKEN=
 POSTMARK_FROM_EMAIL=
+```
+
+### Supabase secrets (for edge functions)
+```
+POSTMARK_SMTP_API_TOKEN=
+POSTMARK_FROM_EMAIL=
+NEXT_PUBLIC_APP_URL=
 ```
 
 The app URL for auth redirects is resolved in `getAppUrl()` (`app/actions/auth.ts`) — it checks (in order): `APP_URL`, `NEXT_PUBLIC_APP_URL`, `VERCEL_PROJECT_PRODUCTION_URL`, `VERCEL_URL`, then falls back to request `origin` / `host` headers.
