@@ -4,14 +4,15 @@ interface ConfirmModalProps {
   onConfirm: () => void;
   onCancel: () => void;
   deleting?: boolean;
+  message?: string;
 }
 
-export const ConfirmModal = ({ onConfirm, onCancel, deleting }: ConfirmModalProps) => {
+export const ConfirmModal = ({ onConfirm, onCancel, deleting, message }: ConfirmModalProps) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
         <p className="text-gray-900 text-base">
-          Are you sure you want to delete this streak?
+          {message ?? "Are you sure you want to delete this streak?"}
         </p>
 
         <div className="mt-6 flex justify-end gap-3">

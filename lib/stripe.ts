@@ -9,3 +9,4 @@ export const STRIPE_PRO_PRICE_ID =
   process.env.STRIPE_PRO_PRICE_ID ?? 'price_dummy_replace_with_real_price_id'
 
 export const FREE_TIER_STREAK_LIMIT = 3
+export const FREE_TIER_JOURNAL_ENTRY_LIMIT = 10

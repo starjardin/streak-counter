@@ -9,3 +9,10 @@
 - **Follow**: One-directional relationship. A follows B → A sees B's public streak names and counts.
 - **Friend Request**: An invitation to upgrade a follow to mutual. Sender requests, receiver approves.
 - **Friend**: Mutual follow relationship (both follow each other with `status = 'friends'`). Full streak history visibility.
+
+## Journal
+
+- **Journal Entry**: A rich-text document written by a user, belonging to a specific calendar date. Not linked to any streak.
+- **Daily Journal**: The set of all journal entries for a given date. A day can have multiple entries.
+- **Paper Feel**: The visual aesthetic of the journal — warm off-white background, ruled lines or subtle grid, serif body font, generous whitespace, subtle paper texture/shadow.
+- **Entry Limit**: Free-tier users are capped at 10 journal entries total. Pro users have unlimited entries.

@@ -1,14 +1,14 @@
 import { logout } from "@/app/actions/auth";
 import Link from "next/link";
-import { StreaksList } from "./StreaksList";
-import { NewStreakButton } from "./NewStreakButton";
-import { UserAvatar } from "./UserAvatar";
+import { UserAvatar } from "../UserAvatar";
 import { Button } from "@/components/Button";
+import { DashboardTabs } from "../DashboardTabs";
 import { isCurrentUserAdmin } from "@/lib/db/users";
 import { createClient } from "@/lib/supabase/server";
-import { DashboardTabs } from "./DashboardTabs";
+import { getJournalEntries, getDatesWithEntries } from "@/lib/db/journal-entries";
+import { JournalPage } from "./JournalPage";
 
-export default async function DashboardPage() {
+export default async function JournalPageServer() {
   const supabase = await createClient();
   const { data: { user: authUser } } = await supabase.auth.getUser();
   const admin = await isCurrentUserAdmin();
@@ -25,9 +25,14 @@ export default async function DashboardPage() {
     }
   }
 
+  const today = new Date().toISOString().slice(0, 10);
+  const [datesWithEntries, todayEntries] = await Promise.all([
+    getDatesWithEntries(),
+    getJournalEntries(today),
+  ]);
+
   return (
     <main className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
@@ -97,22 +102,11 @@ export default async function DashboardPage() {
         <DashboardTabs />
       </div>
 
-      {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Your Streaks
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              View and manage your active streaks
-            </p>
-          </div>
-          <NewStreakButton />
-        </div>
-
-        {/* Streaks List */}
-        <StreaksList />
+        <JournalPage
+          datesWithEntries={datesWithEntries}
+          todayEntries={todayEntries}
+        />
       </div>
     </main>
   );
