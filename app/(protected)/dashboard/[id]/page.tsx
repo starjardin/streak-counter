@@ -78,21 +78,19 @@ export default async function StreakDetailPage({
     .map((l) => l.date)
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-        <StreakDetail
-          streak={streak}
-          username={username}
-          checkedDates={checkedDates}
-          onTimeDates={onTimeDates}
-          todayChecked={todayChecked}
-          isPro={isPro}
-          isTrialing={isTrialing}
-          freezesRemaining={freezesRemaining}
-          trialEnds={trialEnds}
-          notesByDate={notesByDate}
-        />
-      </div>
-    </main>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+      <StreakDetail
+        streak={streak}
+        username={username}
+        checkedDates={checkedDates}
+        onTimeDates={onTimeDates}
+        todayChecked={todayChecked}
+        isPro={isPro}
+        isTrialing={isTrialing}
+        freezesRemaining={freezesRemaining}
+        trialEnds={trialEnds}
+        notesByDate={notesByDate}
+      />
+    </div>
   )
 }

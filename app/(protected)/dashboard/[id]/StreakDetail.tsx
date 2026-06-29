@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useActionState } from "react";
-import Link from "next/link";
 import toast from "react-hot-toast";
 import confetti from "canvas-confetti";
 import {
@@ -82,26 +81,6 @@ export function StreakDetail({ streak, username, checkedDates, onTimeDates, toda
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-      >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-        Back to dashboard
-      </Link>
-
       <StreakInfo streak={streak} username={username} />
 
       {/* Stats + check-in card */}
