@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { AuthProvider } from "@/context/AuthProvider";
 import { PwaRegister } from "./PwaRegister";
 import "./globals.css";
@@ -43,6 +44,7 @@ export default function RootLayout({
         </Suspense>
         <PwaRegister />
         <Toaster position="bottom-center" toastOptions={{ duration: 4000 }} />
+        <SpeedInsights />
       </body>
     </html>
   );
