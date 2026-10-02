@@ -165,7 +165,6 @@ export function NavigationShell({
         </div>
       </header>
 
-      {/* Mobile: thin top bar for streak detail */}
       {isStreakDetail && (
         <header className="lg:hidden sticky top-0 z-10 bg-white border-b border-gray-200">
           <div className="flex items-center h-12 px-4">
@@ -180,10 +179,8 @@ export function NavigationShell({
         </header>
       )}
 
-      {/* Main content */}
       <main className="flex-1 pb-16 lg:pb-0">{children}</main>
 
-      {/* Bottom tab bar (mobile only, hidden on streak detail) */}
       {!isStreakDetail && (
         <nav className="fixed bottom-0 left-0 right-0 z-20 lg:hidden">
           <div className="bg-white border-t border-gray-200">
@@ -222,7 +219,6 @@ export function NavigationShell({
         </nav>
       )}
 
-      {/* Drawer */}
       {drawerOpen && (
         <div className="fixed inset-0 z-30 lg:hidden">
           <div
